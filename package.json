@@ -1,0 +1,14 @@
+{
+  "name": "hubrooms-node",
+  "version": "0.0.1",
+  "description": "A website",
+  "author": "Ted Kulp",
+  "dependencies": {
+    "express.io": "*",
+    "underscore": "*",
+    "passport-github": "0.1.3",
+    "passport" : "0.1.16",
+    "coffee-script" : "*",
+    "jade" : "*"
+  }
+}

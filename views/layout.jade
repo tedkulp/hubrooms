@@ -1,0 +1,42 @@
+!!!
+html
+  head
+    title= title
+    link(rel='stylesheet', href='/css/bootstrap.min.css')
+    link(rel='stylesheet', href='/css/bootstrap-responsive.min.css')
+    // link(rel='stylesheet', href='/css/style.css')
+    script(src='//ajax.googleapis.com/ajax/libs/jquery/1/jquery.min.js')
+    script(src='/js/bootstrap.min.js')
+    script(src='/socket.io/socket.io.js')
+    style
+      body {
+        padding-top: 60px;
+      }
+
+  body
+    .navbar.navbar-inverse.navbar-fixed-top
+      .navbar-inner
+        .container
+          button.btn.btn-navbar(type='button',data-toggle='collapse',data-target='.nav-collapse')
+            span.icon-bar
+            span.icon-bar
+            span.icon-bar
+          a.brand(href='#') Project Name
+          .nav-collapse.collapse
+            ul.nav
+              li.active
+                a(href='#') Home
+              li
+                a(href='#') About
+              li
+                a(href='#') Contact
+            ul.nav.pull-right
+              li
+                a(href='/auth/github') Sign In w/ Github
+
+    .container
+      .content
+        block content
+
+      .footer
+        p &copy; 2012 All rights reserved.
