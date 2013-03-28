@@ -35,6 +35,8 @@ app.configure ->
   app.use(passport.initialize())
   app.use(passport.session())
 
+  app.use require('connect-assets')()
+
   app.use(app.router)
   app.use(express.static(__dirname + '/public'))
 
