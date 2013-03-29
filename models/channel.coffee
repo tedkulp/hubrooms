@@ -4,14 +4,9 @@ ObjectId = Schema.ObjectId
 timestamps = require 'mongoose-times'
 findOrCreate = require 'mongoose-findorcreate'
 
-UserSchema = new Schema
-  login: String
-  external_id: Number
+ChannelSchema = new Schema
   name: String
-  location: String
-  email: String
-  url: String
-  channels: [{ type: Schema.Types.ObjectId, ref: 'Channel' }]
+  users: [{ type: Schema.Types.ObjectId, ref: 'User' }]
 
 UserSchema.plugin timestamps, { created: "created_at", lastUpdated: "updated_at" }
 UserSchema.plugin findOrCreate

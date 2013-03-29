@@ -60,6 +60,11 @@ app.get '/', (req, res) ->
     title: 'Home'
     user: req.user
 
+app.get /^\/(?!(?:js|css|auth))[^\/]+?\/([^\/]+?)/, (req, res) ->
+  res.render 'chat',
+    title: 'Chat'
+    user: req.user
+
 app.get '/logout', (req, res) ->
   req.logout();
   res.redirect '/'

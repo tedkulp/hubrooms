@@ -5,10 +5,27 @@ Socket = io.connect()
 #   unseen     : '#tab1'
 #   unfriended : '#tab2'
 
+Hubrooms.module 'Models', (module, App, Backbone, Marionette, $, _) ->
+  class module.Channel extends Backbone.Model
+    name: 'channel'
+
+  class module.Channels extends Backbone.Collection
+    model: module.Channel
+    url: '/channels'
+
+  class module.Message extends Backbone.Model
+    name: 'message'
+
+  class module.Messages extends Backbone.Collection
+    model: module.Message
+    url: '/messages'
+
+Hubrooms.module 'Views', (module, App, Backbone, Marionette, $, _) ->
+
 Hubrooms.module 'Router', (module, App, Backbone, Marionette, $, _) ->
   class module.Router extends Marionette.AppRouter
     appRoutes:
-      '' : 'index'
+      ':username/:channel' : 'chat'
 
   class module.Controller
     constructor: ->
@@ -19,7 +36,8 @@ Hubrooms.module 'Router', (module, App, Backbone, Marionette, $, _) ->
       #fill initial collections
       #assign them to regions
 
-    index: ->
+    chat: ->
+      console.log 'here'
 
   module.addInitializer ->
     controller = new module.Controller()
@@ -32,7 +50,7 @@ Hubrooms.module 'Router', (module, App, Backbone, Marionette, $, _) ->
     App.router = router
 
 Hubrooms.on 'initialize:after', ->
-  Backbone.history.start()
+  Backbone.history.start({pushState: true})
 
   # Let the server know we're here
   Socket.emit('ready')
