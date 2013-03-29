@@ -56,7 +56,6 @@ app.configure ->
   app.use(express.static(__dirname + '/public'))
 
 app.get '/', (req, res) ->
-  console.log req.user
   res.render 'index',
     title: 'Home'
     user: req.user
