@@ -13,6 +13,8 @@
     "connect-assets" : "*",
     "mongoose" : "*",
     "mongoose-times" : "*",
-    "mongoose-findorcreate" : "*"
+    "mongoose-findorcreate" : "*",
+    "redis" : "*",
+    "connect-redis" : "*"
   }
 }

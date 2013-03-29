@@ -3,6 +3,9 @@ app = express().http().io()
 mongoose = require('mongoose')
 User = require('./models/user')
 
+redis = require('redis')
+RedisStore = require('connect-redis')(express)
+
 mongoose.connect('mongodb://shiftrefresh:N0g1M2o0@dharma.mongohq.com:10060/hubrooms-dev')
 
 passport = require 'passport'
@@ -43,7 +46,10 @@ app.configure ->
   app.use(express.cookieParser())
   app.use(express.bodyParser())
   app.use(express.methodOverride())
-  app.use(express.session({ secret: 'nyan cat is hungry' }))
+  app.use express.session
+    secret: 'nyan cat is hungry'
+    store: new RedisStore
+      client: redis.createClient()
 
   # Initialize Passport!  Also use passport.session() middleware, to support
   # persistent login sessions (recommended).
@@ -54,6 +60,11 @@ app.configure ->
 
   app.use(app.router)
   app.use(express.static(__dirname + '/public'))
+
+  app.io.set 'store', new express.io.RedisStore
+    redisPub: redis.createClient()
+    redisSub: redis.createClient()
+    redisClient: redis.createClient()
 
 app.get '/', (req, res) ->
   res.render 'index',
