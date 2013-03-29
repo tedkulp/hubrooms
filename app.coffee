@@ -1,5 +1,9 @@
 express = require('express.io')
 app = express().http().io()
+mongoose = require('mongoose')
+User = require('./models/user')
+
+mongoose.connect('mongodb://shiftrefresh:N0g1M2o0@dharma.mongohq.com:10060/hubrooms-dev')
 
 passport = require 'passport'
 GitHubStrategy = require('passport-github').Strategy
@@ -18,8 +22,19 @@ passport.use new GitHubStrategy
   clientSecret: GITHUB_CLIENT_SECRET
   callbackURL: "http://hubrooms.dev:3000/auth/github/callback"
 , (accessToken, refreshToken, profile, done) ->
-  process.nextTick ->
-    done(null, profile)
+  User.findOrCreate
+    external_id: profile.id
+  ,
+    login: profile.username
+    name: profile.displayName
+    location: profile._json.location
+    email: profile._json.email
+    url: profile.profileUrl
+  ,
+    upsert: true
+  ,
+    (err, user) ->
+      done(null, user) unless err
 
 app.configure ->
   app.set('views', __dirname + '/views')
@@ -41,17 +56,23 @@ app.configure ->
   app.use(express.static(__dirname + '/public'))
 
 app.get '/', (req, res) ->
+  console.log req.user
   res.render 'index',
     title: 'Home'
+    user: req.user
+
+app.get '/logout', (req, res) ->
+  req.logout();
+  res.redirect '/'
 
 app.get '/auth/github',
   passport.authenticate('github'),
   (req, res) ->
+    # Never called
 
 app.get '/auth/github/callback',
   passport.authenticate('github', { failureRedirect: '/login' }),
   (req, res) ->
-    console.log req.user
     res.redirect('/')
 
 app.listen(3000)

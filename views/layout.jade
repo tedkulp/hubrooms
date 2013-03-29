@@ -33,7 +33,10 @@ html
                 a(href='#') Contact
             ul.nav.pull-right
               li
-                a(href='/auth/github') Sign In w/ Github
+                if user
+                  a(href='/logout') Signed in as: #{user.name}
+                else
+                  a(href='/auth/github') Sign In w/ Github
 
     .container
       .content
