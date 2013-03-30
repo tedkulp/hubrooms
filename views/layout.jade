@@ -26,7 +26,7 @@ html
             span.icon-bar
             span.icon-bar
             span.icon-bar
-          a.brand(href='#') Project Name
+          a.brand(href='/') Project Name
           .nav-collapse.collapse
             ul.nav
               li.active
@@ -42,9 +42,6 @@ html
                 else
                   a(href='/auth/github') Sign In w/ Github
 
-    .container
-      .content
+    .container-fluid
+      .row-fluid
         block content
-
-      .footer
-        p &copy; 2012 All rights reserved.

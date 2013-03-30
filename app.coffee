@@ -2,6 +2,7 @@ express = require('express.io')
 app = express().http().io()
 mongoose = require('mongoose')
 User = require('./models/user')
+Channel = require('./models/channel')
 
 redis = require('redis')
 RedisStore = require('connect-redis')(express)
@@ -57,6 +58,7 @@ app.configure ->
   app.use(passport.session())
 
   app.use require('connect-assets')()
+  js.root = "js"
 
   app.use(app.router)
   app.use(express.static(__dirname + '/public'))
@@ -69,11 +71,6 @@ app.configure ->
 app.get '/', (req, res) ->
   res.render 'index',
     title: 'Home'
-    user: req.user
-
-app.get /^\/(?!(?:js|css|auth))[^\/]+?\/([^\/]+?)/, (req, res) ->
-  res.render 'chat',
-    title: 'Chat'
     user: req.user
 
 app.get '/logout', (req, res) ->
@@ -89,5 +86,16 @@ app.get '/auth/github/callback',
   passport.authenticate('github', { failureRedirect: '/login' }),
   (req, res) ->
     res.redirect('/')
+
+app.get '/channels', (req, res) ->
+  Channel
+    .find()
+    .exec (err, channels) ->
+      res.json(channels)
+
+app.get /^\/(?!(?:css|js))([^\/]+)\/([^\/]+)$/, (req, res) ->
+  res.render 'chat',
+    title: 'Chat'
+    user: req.user
 
 app.listen(3000)

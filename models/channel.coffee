@@ -8,7 +8,7 @@ ChannelSchema = new Schema
   name: String
   users: [{ type: Schema.Types.ObjectId, ref: 'User' }]
 
-UserSchema.plugin timestamps, { created: "created_at", lastUpdated: "updated_at" }
-UserSchema.plugin findOrCreate
+ChannelSchema.plugin timestamps, { created: "created_at", lastUpdated: "updated_at" }
+ChannelSchema.plugin findOrCreate
 
-module.exports = mongoose.model('User', UserSchema)
+module.exports = mongoose.model('Channel', ChannelSchema)

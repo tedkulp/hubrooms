@@ -1,9 +1,10 @@
 Hubrooms = new Backbone.Marionette.Application()
 Socket = io.connect()
 
-# Hubrooms.addRegions
-#   unseen     : '#tab1'
-#   unfriended : '#tab2'
+Hubrooms.addRegions
+  channelNav : '#channel_nav_area'
+  messages   : '#messages'
+  userlist   : '#userlist'
 
 Hubrooms.module 'Models', (module, App, Backbone, Marionette, $, _) ->
   class module.Channel extends Backbone.Model
@@ -21,6 +22,31 @@ Hubrooms.module 'Models', (module, App, Backbone, Marionette, $, _) ->
     url: '/messages'
 
 Hubrooms.module 'Views', (module, App, Backbone, Marionette, $, _) ->
+  class module.ChannelNavItem extends Marionette.ItemView
+    template: '#channel-nav-item'
+    tagName: 'li'
+    className: 'channelNavItem'
+    events:
+      'click a' : 'clickChannel'
+
+    initialize: ->
+      @listenTo(App.vent, 'channel:changed', @determineActive, @)
+
+    clickChannel: (e) ->
+      e.preventDefault()
+      App.router.navigate @model.get('name'),
+        trigger: true
+
+    onRender: ->
+      @determineActive()
+
+    determineActive: ->
+      $(@el).toggleClass('active', Backbone.history.fragment == @model.get('name'))
+
+  class module.ChannelNav extends Marionette.CollectionView
+    itemView: module.ChannelNavItem
+    tagName: 'ul'
+    className: 'nav nav-tabs'
 
 Hubrooms.module 'Router', (module, App, Backbone, Marionette, $, _) ->
   class module.Router extends Marionette.AppRouter
@@ -29,14 +55,20 @@ Hubrooms.module 'Router', (module, App, Backbone, Marionette, $, _) ->
 
   class module.Controller
     constructor: ->
-      #setup collections
+      @channels = new App.Models.Channels()
 
     start: ->
-      #setup views
-      #fill initial collections
-      #assign them to regions
+      @setupChannelNav()
+
+    setupChannelNav: ->
+      channelNav = new App.Views.ChannelNav
+        collection: @channels
+      App.channelNav.show channelNav
+
+      @channels.fetch()
 
     chat: ->
+      App.vent.trigger('channel:changed', Backbone.history.fragment)
       console.log 'here'
 
   module.addInitializer ->
