@@ -3,6 +3,7 @@ app = express().http().io()
 mongoose = require('mongoose')
 User = require('./models/user')
 Channel = require('./models/channel')
+Message = require('./models/message')
 
 redis = require('redis')
 RedisStore = require('connect-redis')(express)
@@ -92,6 +93,21 @@ app.get '/channels', (req, res) ->
     .find()
     .exec (err, channels) ->
       res.json(channels)
+
+app.get '/messages', (req, res) ->
+  Message
+    .find
+      channel_id: req.param('channel_id')
+    .exec (err, messages) ->
+      res.json(messages)
+
+app.post '/messages', (req, res) ->
+  message = new Message(req.body)
+  message.user_id = req.user['_id']
+  message.login = req.user.login
+  message.name = req.user.name
+  message.save (err) ->
+    res.json(message)
 
 app.get /^\/(?!(?:css|js))([^\/]+)\/([^\/]+)$/, (req, res) ->
   res.render 'chat',
