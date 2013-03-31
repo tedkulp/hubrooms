@@ -104,7 +104,7 @@ Hubrooms.module 'Views', (module, App, Backbone, Marionette, $, _) ->
       model = new App.Models.Message()
       model.set('msg', @ui.inputBox.val())
 
-      @getCurrentChannel().done (currentChannel) ->
+      @getCurrentChannel().done (currentChannel) =>
         if model.isValid() and currentChannel
           model.set('channel_id', currentChannel.get('_id'))
           model.save
@@ -114,12 +114,53 @@ Hubrooms.module 'Views', (module, App, Backbone, Marionette, $, _) ->
               console.log message
               console.log jqXHR
 
-          console.log model
           @ui.inputBox.val('')
 
   class module.MessageItem extends Marionette.ItemView
     template: '#message-item'
     tagName: "tr"
+    ui:
+      time    : '.message_time'
+      message : '.message'
+      name    : '.message_name'
+
+    imgRegex: /(https?:\/\/\S+\.(gif|jpe?g|png))(?:\?[A-Za-z0-9_\-\=]+)?/ig
+    linkRegex: /(\b(https?|ftp|file):\/\/[-A-Z0-9+&@#\/%?=~_|!:,.;]*[-A-Z0-9+&@#\/%=~_|])/ig
+    emojiRegex: /\:([A-Za-z0-9\-_]+)\:/ig
+    youtubeRegex: /http:\/\/(?:www\.)?youtube.com\/watch\?(?=.*v=([\w\-]+))(?:[^><\s]+)?/ig
+    emoticonsRegex: null
+    emoticons:
+      ':-)' : '/assets/emojis/smile.png'
+      ':)'  : '/assets/emojis/smile.png'
+      ':D'  : '/assets/emojis/tongue.png'
+      ':-|' : '/assets/emojis/pensive.png'
+      ':-(' : '/assets/emojis/cry.png'
+      ':('  : '/assets/emojis/cry.png'
+      ';-)' : '/assets/emojis/wink.png'
+      ';)'  : '/assets/emojis/wink.png'
+
+    onRender: ->
+      @ui.time.html(moment(@ui.time.data('ts')).format('D-MMM h:mma'))
+      @ui.message.html(@replaceMessageText(@ui.message.html()))
+
+    replaceMessageText: (resp) ->
+      imgResp = @replaceURLWithImageTags(resp)
+      if imgResp != resp
+        resp = imgResp
+      else
+        linkResp = @replaceURLWithHTMLLinks(resp)
+        if linkResp != resp
+          resp = linkResp
+
+      resp
+
+    replaceURLWithHTMLLinks: (text) ->
+      text.replace @linkRegex, (match, m0) ->
+        "<a href='#{m0}' target='_blank'>#{m0}</a>"
+
+    replaceURLWithImageTags: (text) ->
+      text.replace @imgRegex, (match, m0) ->
+        "<a href='#{m0}' target='_blank'><img src='#{m0}' alt='' border='0' align='absmiddle' /></a>"
 
   class module.MessagesView extends Marionette.CollectionView
     itemView: module.MessageItem
