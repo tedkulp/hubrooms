@@ -257,6 +257,12 @@ Hubrooms.on 'initialize:after', ->
   # Let the server know we're here
   Socket.emit('ready')
 
+  # Move me somewhere better
+  Socket.on 'new-message', (data) ->
+    message = new Hubrooms.Models.Message(data)
+    if message
+      Hubrooms.controller.messages.add(message)
+
   window.Hubrooms = Hubrooms
   window.Socket = Socket
 

@@ -1,4 +1,5 @@
 express = require('express.io')
+_ = require('underscore')
 app = express().http().io()
 mongoose = require('mongoose')
 User = require('./models/user')
@@ -68,6 +69,12 @@ app.configure ->
     redisSub: redis.createClient()
     redisClient: redis.createClient()
 
+requireLogin = (req, res, next) ->
+  if req.session and req.session.passport and req.session.passport.user
+    next()
+  else
+    res.send(403)
+
 app.get '/', (req, res) ->
   res.render 'index',
     title: 'Home'
@@ -87,30 +94,43 @@ app.get '/auth/github/callback',
   (req, res) ->
     res.redirect('/')
 
-app.get '/channels', (req, res) ->
+app.get '/channels', requireLogin, (req, res) ->
   Channel
     .find()
     .exec (err, channels) ->
       res.json(channels)
 
-app.get '/messages', (req, res) ->
+app.get '/messages', requireLogin, (req, res) ->
   Message
     .find
       channel_id: req.param('channel_id')
     .exec (err, messages) ->
       res.json(messages)
 
-app.post '/messages', (req, res) ->
+app.post '/messages', requireLogin, (req, res) ->
   message = new Message(req.body)
   message.user_id = req.user['_id']
   message.login = req.user.login
   message.name = req.user.name
   message.save (err) ->
     res.json(message)
+    unless err
+      app.io.room(message.channel_id).broadcast('new-message', message)
 
-app.get /^\/(?!(?:css|js))([^\/]+)\/([^\/]+)$/, (req, res) ->
+app.get /^\/(?!(?:css|js))([^\/]+)\/([^\/]+)$/, requireLogin, (req, res) ->
   res.render 'chat',
     title: 'Chat'
     user: req.user
+
+app.io.route 'ready', (req) ->
+  if req.session and req.session.passport
+    # Join rooms for all joined channels
+    Channel
+      .find
+        users: req.session.passport.user._id
+      .exec (err, channels) ->
+        if !err and channels
+          _.each channels, (channel) ->
+            req.io.join(channel['_id'])
 
 app.listen(3000)
