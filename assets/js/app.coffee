@@ -139,11 +139,29 @@ Hubrooms.module 'Views', (module, App, Backbone, Marionette, $, _) ->
       ';-)' : '/assets/emojis/wink.png'
       ';)'  : '/assets/emojis/wink.png'
 
+    initialize: (options) ->
+      # TODO: Find way to not store this in a global for caching
+      if App.emoticonsRegex
+        @emoticonsRegex = App.emoticonsRegex
+      else
+        patterns = []
+        metachars = /[[\]{}()*+?.\\|^$\-,&#\s]/g
+
+        for key,value of @emoticons
+          if @emoticons.hasOwnProperty(key)
+            patterns.push '(' + key.replace(metachars, "\\$&") + ')'
+
+        @emoticonsRegex = new RegExp(patterns.join('|'), 'g')
+        App.emoticonsRegex = @emoticonsRegex
+
     onRender: ->
       @ui.time.html(moment(@ui.time.data('ts')).format('D-MMM h:mma'))
       @ui.message.html(@replaceMessageText(@ui.message.html()))
 
     replaceMessageText: (resp) ->
+      if @containsLogin(resp, window.user_login)
+        $(@el).addClass('highlightedRow')
+
       imgResp = @replaceURLWithImageTags(resp)
       if imgResp != resp
         resp = imgResp
@@ -152,7 +170,12 @@ Hubrooms.module 'Views', (module, App, Backbone, Marionette, $, _) ->
         if linkResp != resp
           resp = linkResp
 
+      resp = @replaceTextWithEmoticons(resp)
+      resp = @replaceTextWithEmoji(resp)
       resp
+
+    containsLogin: (text, login) ->
+      text.indexOf(login) > -1
 
     replaceURLWithHTMLLinks: (text) ->
       text.replace @linkRegex, (match, m0) ->
@@ -161,6 +184,20 @@ Hubrooms.module 'Views', (module, App, Backbone, Marionette, $, _) ->
     replaceURLWithImageTags: (text) ->
       text.replace @imgRegex, (match, m0) ->
         "<a href='#{m0}' target='_blank'><img src='#{m0}' alt='' border='0' align='absmiddle' /></a>"
+
+    replaceTextWithEmoticons: (text) ->
+      text.replace @emoticonsRegex, (match) =>
+        if typeof @emoticons[match] != 'undefined'
+         "<img src='" + @emoticons[match] + "' height='20' width='20' align='absmiddle'/>"
+        else
+          match
+
+    replaceTextWithEmoji: (text) =>
+      text.replace @emojiRegex, (str, p1, offset, s) ->
+        if App.emoji_map and App.emoji_map[p1]
+          "<img src='" + App.emoji_map[p1] + "' height='20' width='20' align='absmiddle' />"
+        else
+          str
 
   class module.MessagesView extends Marionette.CollectionView
     itemView: module.MessageItem
