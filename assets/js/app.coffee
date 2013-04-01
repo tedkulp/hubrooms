@@ -262,7 +262,6 @@ Hubrooms.on 'initialize:after', ->
     message = new Hubrooms.Models.Message(data)
     if message
       currentChannel = Hubrooms.controller.channels.findCurrent()
-      console.log currentChannel.get('_id'), message.get('channel_id')
       if currentChannel.get('_id') == message.get('channel_id')
         Hubrooms.controller.messages.add(message)
       else
