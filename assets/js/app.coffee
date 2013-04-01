@@ -261,7 +261,12 @@ Hubrooms.on 'initialize:after', ->
   Socket.on 'new-message', (data) ->
     message = new Hubrooms.Models.Message(data)
     if message
-      Hubrooms.controller.messages.add(message)
+      currentChannel = Hubrooms.controller.channels.findCurrent()
+      console.log currentChannel.get('_id'), message.get('channel_id')
+      if currentChannel.get('_id') == message.get('channel_id')
+        Hubrooms.controller.messages.add(message)
+      else
+        # Handle the highlighting if name is mentioned
 
   window.Hubrooms = Hubrooms
   window.Socket = Socket
