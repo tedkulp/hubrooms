@@ -96,7 +96,8 @@ app.get '/auth/github/callback',
 
 app.get '/channels', requireLogin, (req, res) ->
   Channel
-    .find()
+    .find
+      users: req.session.passport.user._id
     .exec (err, channels) ->
       res.json(channels)
 
