@@ -136,15 +136,14 @@ findChannels = (user, callback, socket, clientCount) ->
 openSessions = new Object
 
 joinChannel = (user, channel, socket) ->
-  console.log "joining channel", channel.name, user._id
+  # console.log "joining channel", channel.name, user._id
   RedisClient.sadd('channel-' + channel._id, user._id)
   if socket?
     socket.join(channel['_id'])
     openSessions[socket.id].channelIds.push(channel._id)
 
 leaveChannel = (user, channel, socketId, clientCount) ->
-  console.log "leaving channel", channel.name, user._id
-  console.log clientCount
+  # console.log "leaving channel", channel.name, user._id
   RedisClient.srem('channel-' + channel._id, user._id) if clientCount? and clientCount < 1
 
 app.io.sockets.on 'connection', (socket) ->
