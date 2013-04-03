@@ -8,6 +8,7 @@ Message = require('./models/message')
 
 redis = require('redis')
 RedisStore = require('connect-redis')(express)
+RedisClient = redis.createClient()
 
 mongoose.connect('mongodb://shiftrefresh:N0g1M2o0@dharma.mongohq.com:10060/hubrooms-dev')
 
@@ -52,7 +53,7 @@ app.configure ->
   app.use express.session
     secret: 'nyan cat is hungry'
     store: new RedisStore
-      client: redis.createClient()
+      client: RedisClient
 
   # Initialize Passport!  Also use passport.session() middleware, to support
   # persistent login sessions (recommended).
@@ -123,15 +124,52 @@ app.get /^\/(?!(?:css|js))([^\/]+)\/([^\/]+)$/, requireLogin, (req, res) ->
     title: 'Chat'
     user: req.user
 
-app.io.route 'ready', (req) ->
-  if req.session and req.session.passport
-    # Join rooms for all joined channels
-    Channel
-      .find
-        users: req.session.passport.user._id
-      .exec (err, channels) ->
-        if !err and channels
-          _.each channels, (channel) ->
-            req.io.join(channel['_id'])
+findChannels = (user, callback, socket) ->
+  Channel
+    .find
+      users: user._id
+    .exec (err, channels) ->
+      if !err and channels
+        _.each channels, (channel) ->
+          callback(user, channel, socket)
+
+openSessions = new Object
+
+joinChannel = (user, channel, socket) ->
+  console.log "joining channel", channel.name, user._id
+  RedisClient.sadd('channel-' + channel._id, user._id)
+  if socket?
+    socket.join(channel['_id'])
+    openSessions[socket.id].channelIds.push(channel._id)
+
+leaveChannel = (user, channel, socket) ->
+  console.log "leaving channel", channel.name, user._id
+  RedisClient.srem('channel-' + channel._id, user._id)
+  if socket?
+    socket.leave(channel['_id'])
+    openSessions[socket.id].channelIds = _.without(openSessions[socket.id].channelIds, channel._id)
+
+app.io.sockets.on 'connection', (socket) ->
+  if socket.handshake.session and socket.handshake.session.passport
+    openSessions[socket.id] = socket.handshake.session.passport.user
+    openSessions[socket.id].channelIds ||= []
+    findChannels(socket.handshake.session.passport.user, joinChannel, socket)
+    RedisClient.incr('user-' + socket.handshake.session.passport.user._id)
+
+  socket.on 'disconnect', ->
+    if socket.handshake.session and socket.handshake.session.passport
+      findChannels(socket.handshake.session.passport.user, leaveChannel, socket)
+      RedisClient.decr('user-' + socket.handshake.session.passport.user._id)
+      delete openSessions[socket.id]
+
+gracefulShutdown = ->
+  _.each openSessions, (user, socketId) ->
+    RedisClient.decr('user-' + user._id)
+    _.each user.channelIds, (channelId) ->
+      RedisClient.srem('channel-' + channelId, user._id)
+  process.exit()
+
+process.on 'SIGINT', ->
+  gracefulShutdown()
 
 app.listen(3000)
