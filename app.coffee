@@ -102,6 +102,21 @@ app.get '/channels', requireLogin, (req, res) ->
     .exec (err, channels) ->
       res.json(channels)
 
+app.get '/channel_users', requireLogin, (req, res) ->
+  Channel
+    .find
+      _id: req.param('channel_id')
+      users: req.session.passport.user._id
+    .populate('users')
+    .exec (err, channel) ->
+      #TODO: Handle error
+      RedisClient.smembers 'channel-' + req.param('channel_id'), (err, value) ->
+        res.json _.map _.first(channel).users, (user) ->
+          _.chain(user.toObject())
+            .tap (theUser) ->
+              theUser.present = _.contains(value, String(user._id))
+            .value()
+
 app.get '/messages', requireLogin, (req, res) ->
   Message
     .find
