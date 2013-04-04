@@ -13,6 +13,8 @@ block content
     table#render_table.table.table-striped.table-condensed(style='')
       tbody
 
+  != js('app')
+
   script
     $(document).ready(function() {
       window.user_id = '#{user._id}';
