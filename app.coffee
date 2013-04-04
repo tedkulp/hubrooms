@@ -103,6 +103,7 @@ app.get '/channels', requireLogin, (req, res) ->
       res.json(channels)
 
 app.get '/channel_users', requireLogin, (req, res) ->
+  #TODO> Handle no channel_id passed
   Channel
     .find
       _id: req.param('channel_id')

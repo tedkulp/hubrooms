@@ -34,3 +34,8 @@ block content
       strong <%= login %>:
     td.message <%= msg %>
     td.message_time(data-ts!='<%= created_at %>') <%= created_at %>
+
+  script#channel-user-item(type='text/html')
+    span.user_list_login_name(data-login!='<%= login %>')
+      i.icon-user
+      <%= login %>

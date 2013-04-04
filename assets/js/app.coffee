@@ -4,7 +4,7 @@ Socket = io.connect()
 Hubrooms.addRegions
   channelNav      : '#channel_nav_area'
   messages        : '#messages'
-  userlist        : '#userlist'
+  userList        : '#userlist'
   sendMessageArea : '#send_message_area'
 
 Hubrooms.module 'Models', (module, App, Backbone, Marionette, $, _) ->
@@ -57,7 +57,24 @@ Hubrooms.module 'Models', (module, App, Backbone, Marionette, $, _) ->
     page: 1
     channelId: ''
 
+  class module.User extends Backbone.Model
+
+  class module.Users extends Backbone.Collection
+    model: module.User
+    url: '/channel_users'
+    channelId: ''
+
 Hubrooms.module 'Views', (module, App, Backbone, Marionette, $, _) ->
+  class module.ChannelUserItem extends Marionette.ItemView
+    template: '#channel-user-item'
+    tagName: 'li'
+    className: 'channelUserItem'
+
+  class module.UserList extends Marionette.CollectionView
+    itemView: module.ChannelUserItem
+    tagName: 'ul'
+    className: 'nav nav-list'
+
   class module.ChannelNavItem extends Marionette.ItemView
     template: '#channel-nav-item'
     tagName: 'li'
@@ -213,10 +230,12 @@ Hubrooms.module 'Router', (module, App, Backbone, Marionette, $, _) ->
     constructor: ->
       @channels = new App.Models.Channels()
       @messages = new App.Models.Messages()
+      @users = new App.Models.Users()
 
     start: ->
       @setupChannelNav()
       @setupSendMessageArea()
+      @setupUserList()
 
       messagesView = new App.Views.MessagesView
         collection: @messages
@@ -231,11 +250,19 @@ Hubrooms.module 'Router', (module, App, Backbone, Marionette, $, _) ->
         collection: @channels
       App.channelNav.show channelNav
 
+    setupUserList: ->
+      userList = new App.Views.UserList
+        collection: @users
+      App.userList.show userList
+
       # No need to fetch -- @chat will do it in the getCurrentChannel call
 
     chat: ->
       @channels.getCurrentChannel().done (currentChannel) =>
         @messages.fetch
+          data:
+            channel_id: currentChannel.get('_id')
+        @users.fetch
           data:
             channel_id: currentChannel.get('_id')
 
