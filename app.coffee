@@ -197,4 +197,8 @@ gracefulShutdown = ->
 process.on 'SIGINT', ->
   gracefulShutdown()
 
+process.on 'uncaughtException', (err) ->
+  console.log "Uncaught Exception:", err
+  gracefulShutdown()
+
 app.listen(3000)
