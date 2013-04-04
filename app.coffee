@@ -134,7 +134,7 @@ app.post '/messages', requireLogin, (req, res) ->
     unless err
       app.io.room(message.channel_id).broadcast('new-message', message)
 
-app.get /^\/(?!(?:css|js))([^\/]+)\/([^\/]+)$/, requireLogin, (req, res) ->
+app.get /^\/(?!(?:css|js|img))([^\/]+)\/([^\/]+)$/, requireLogin, (req, res) ->
   res.render 'chat',
     title: 'Chat'
     user: req.user
