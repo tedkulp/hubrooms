@@ -25,9 +25,6 @@ mongoose.connect(nconf.get('mongoUri'))
 passport = require 'passport'
 GitHubStrategy = require('passport-github').Strategy
 
-GITHUB_CLIENT_ID = nconf.get('github:clientId')
-GITHUB_CLIENT_SECRET = nconf.get('github:clientSecret')
-
 passport.serializeUser (user, done) ->
   done(null, user)
 
@@ -212,4 +209,4 @@ process.on 'uncaughtException', (err) ->
   console.log "Uncaught Exception:", err
   gracefulShutdown()
 
-app.listen(3000)
+app.listen(nconf.get('port'))
