@@ -2,21 +2,31 @@ express = require('express.io')
 _ = require('underscore')
 app = express().http().io()
 mongoose = require('mongoose')
+nconf = require('nconf')
+
+# Load models
 User = require('./models/user')
 Channel = require('./models/channel')
 Message = require('./models/message')
 
+# Setup redis
 redis = require('redis')
 RedisStore = require('connect-redis')(express)
 RedisClient = redis.createClient()
 
-mongoose.connect('mongodb://shiftrefresh:N0g1M2o0@dharma.mongohq.com:10060/hubrooms-dev')
+# Grab all our config vars
+nconf.argv()
+  .env()
+  .file
+    file: "./config/#{app.get('env')}.json"
+
+mongoose.connect(nconf.get('mongoUri'))
 
 passport = require 'passport'
 GitHubStrategy = require('passport-github').Strategy
 
-GITHUB_CLIENT_ID = "afc88baef243936063c4"
-GITHUB_CLIENT_SECRET = "d11f5ed26520e9f020d98489d0976e9de2b6ea24"
+GITHUB_CLIENT_ID = nconf.get('github:clientId')
+GITHUB_CLIENT_SECRET = nconf.get('github:clientSecret')
 
 passport.serializeUser (user, done) ->
   done(null, user)
@@ -25,9 +35,9 @@ passport.deserializeUser (obj, done) ->
   done(null, obj)
 
 passport.use new GitHubStrategy
-  clientID: GITHUB_CLIENT_ID
-  clientSecret: GITHUB_CLIENT_SECRET
-  callbackURL: "http://hubrooms.dev:3000/auth/github/callback"
+  clientID: nconf.get('githubClientId')
+  clientSecret: nconf.get('githubClientSecret')
+  callbackURL: nconf.get('githubCallback')
 , (accessToken, refreshToken, profile, done) ->
   User.findOrCreate
     external_id: profile.id
