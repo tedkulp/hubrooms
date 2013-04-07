@@ -12,7 +12,7 @@ Message = require('./models/message')
 # Setup redis
 redis = require('redis')
 RedisStore = require('connect-redis')(express)
-RedisClient = redis.createClient()
+RedisClient = redis.createClient(nconf.get('redisPort'), nconf.get('redisHost'))
 
 # Grab all our config vars
 nconf.argv()
@@ -73,9 +73,9 @@ app.configure ->
   app.use(express.static(__dirname + '/public'))
 
   app.io.set 'store', new express.io.RedisStore
-    redisPub: redis.createClient()
-    redisSub: redis.createClient()
-    redisClient: redis.createClient()
+    redisPub: redis.createClient(nconf.get('redisPort'), nconf.get('redisHost'))
+    redisSub: redis.createClient(nconf.get('redisPort'), nconf.get('redisHost'))
+    redisClient: redis.createClient(nconf.get('redisPort'), nconf.get('redisHost'))
 
 requireLogin = (req, res, next) ->
   if req.session and req.session.passport and req.session.passport.user
