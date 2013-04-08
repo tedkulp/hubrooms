@@ -147,14 +147,14 @@ Hubrooms.module 'Views', (module, App, Backbone, Marionette, $, _) ->
     youtubeRegex: /http:\/\/(?:www\.)?youtube.com\/watch\?(?=.*v=([\w\-]+))(?:[^><\s]+)?/ig
     emoticonsRegex: null
     emoticons:
-      ':-)' : '/assets/emojis/smile.png'
-      ':)'  : '/assets/emojis/smile.png'
-      ':D'  : '/assets/emojis/tongue.png'
-      ':-|' : '/assets/emojis/pensive.png'
-      ':-(' : '/assets/emojis/cry.png'
-      ':('  : '/assets/emojis/cry.png'
-      ';-)' : '/assets/emojis/wink.png'
-      ';)'  : '/assets/emojis/wink.png'
+      ':-)' : '/img/emojis/smile.png'
+      ':)'  : '/img/emojis/smile.png'
+      ':D'  : '/img/emojis/tongue.png'
+      ':-|' : '/img/emojis/pensive.png'
+      ':-(' : '/img/emojis/cry.png'
+      ':('  : '/img/emojis/cry.png'
+      ';-)' : '/img/emojis/wink.png'
+      ';)'  : '/img/emojis/wink.png'
 
     initialize: (options) ->
       # TODO: Find way to not store this in a global for caching
@@ -211,8 +211,8 @@ Hubrooms.module 'Views', (module, App, Backbone, Marionette, $, _) ->
 
     replaceTextWithEmoji: (text) =>
       text.replace @emojiRegex, (str, p1, offset, s) ->
-        if App.emoji_map and App.emoji_map[p1]
-          "<img src='" + App.emoji_map[p1] + "' height='20' width='20' align='absmiddle' />"
+        if window.emoji_map and window.emoji_map[p1]
+          "<img src='" + window.emoji_map[p1] + "' height='20' width='20' align='absmiddle' />"
         else
           str
 
