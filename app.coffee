@@ -3,6 +3,7 @@ _ = require('underscore')
 app = express().http().io()
 mongoose = require('mongoose')
 nconf = require('nconf')
+githubApi = require('github')
 
 # Load models
 User = require('./models/user')
@@ -19,6 +20,9 @@ nconf.argv()
   .env()
   .file
     file: "./config/#{app.get('env')}.json"
+
+github = new githubApi
+  version: '3.0.0'
 
 mongoose.connect(nconf.get('mongoUri'))
 
@@ -44,6 +48,8 @@ passport.use new GitHubStrategy
     location: profile._json.location
     email: profile._json.email
     url: profile.profileUrl
+    access_token: accessToken
+    refresh_token: refreshToken
   ,
     upsert: true
   ,
@@ -152,10 +158,54 @@ app.post '/messages', requireLogin, (req, res) ->
     unless err
       app.io.room(message.channel_id).broadcast('new-message', message)
 
-app.get /^\/(?!(?:css|js|img))([^\/]+)\/([^\/]+)$/, requireLogin, (req, res) ->
+renderChat = (req, res, user) ->
   res.render 'chat',
     title: 'Chat'
-    user: req.user
+    user: user
+
+app.get /^\/(?!(?:css|js|img))([^\/]+)\/([^\/]+)$/, requireLogin, (req, res) ->
+  github.authenticate
+    type: 'oauth'
+    token: req.user.access_token
+  github.repos.get
+    user: req.params[0]
+    repo: req.params[1]
+  , (err, githubChannelData) ->
+    if err
+      # Does not exist or no permission
+      res.status(404)
+      res.render '404-nochannel.jade',
+        title: 'Repository Does Not Exist/No Permission'
+        user: req.user
+    else
+      channelName = "#{req.params[0]}/#{req.params[1]}"
+      Channel
+        .findOne
+          name: channelName
+        .exec (err, channel) ->
+          # Does it exist? Are they a member of this channel yet?
+          if !err? and channel?
+            foundUser = _.find channel.users, (channelUser) ->
+              String(channelUser) == String(req.user._id)
+            if foundUser?
+              renderChat req, res, req.user
+            else
+              channel.addUser req.user, (err, user) ->
+                renderChat req, res, user
+
+          # It doesn't exist -- we have to create the channel first
+          else if !err?
+            if !req.param('force_create')? and (githubChannelData.parent? or githubChannelData.source?)
+              res.render 'ask-for-parent.jade',
+                title: 'Ask for Parent'
+                user: req.user
+                channelName: channelName
+                sourceName: githubChannelData.source.full_name
+                parentName: githubChannelData.parent.full_name
+            else
+              Channel.createChannel channelName, req.user, (err, channel) ->
+                unless err?
+                  renderChat req, res, req.user
 
 findChannels = (user, callback, socket, clientCount) ->
   Channel

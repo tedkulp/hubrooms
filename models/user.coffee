@@ -11,6 +11,8 @@ UserSchema = new Schema
   location: String
   email: String
   url: String
+  access_token: String
+  refresh_token: String
   channels: [{ type: Schema.Types.ObjectId, ref: 'Channel' }]
 
 UserSchema.plugin timestamps, { created: "created_at", lastUpdated: "updated_at" }

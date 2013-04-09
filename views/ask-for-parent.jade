@@ -1,0 +1,21 @@
+extends layout
+
+block content
+  h3 This repository is a fork
+
+  p Are you sure you want to create a channel for this repository? You may have more luck finding like-minded people by using the channel of this repository's parents instead. It's your call...
+
+  if (parentName != sourceName)
+    p Possible Parents:
+  else
+    p Possible Parent:
+
+  ul
+    li
+      a(href='/#{parentName}?force_create=true') #{parentName}
+    - if (parentName != sourceName)
+      li
+        a(href='/#{sourceName}?force_create=true') #{sourceName}
+
+  p Just continue on and create: 
+    a(href='/#{channelName}?force_create=true') #{channelName}

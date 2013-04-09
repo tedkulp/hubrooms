@@ -11,4 +11,13 @@ ChannelSchema = new Schema
 ChannelSchema.plugin timestamps, { created: "created_at", lastUpdated: "updated_at" }
 ChannelSchema.plugin findOrCreate
 
-module.exports = mongoose.model('Channel', ChannelSchema)
+ChannelModel = mongoose.model('Channel', ChannelSchema)
+
+ChannelModel.createChannel = (name, user, callback) ->
+  channel = new ChannelModel
+    name: name
+    users: [ user._id ]
+  channel.save (err, chnl) ->
+    callback(err, chnl) if callback?
+
+module.exports = ChannelModel
