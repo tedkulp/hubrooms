@@ -1,15 +1,23 @@
 extends layout
 
 block content
-  table.table.table-striped
-    thead
-      tr
-        th Table
-        th Heading
-    tbody
-      tr
-        td Blah
-        td Test
-      tr
-        td Hello
-        td World
+  .span6
+    h3 Current Channels
+    table.table
+      ul.unstyled
+        each channel in channels
+          li
+            a(href="/#{channel.name}/leave")
+              i.icon-remove
+            = " "
+            a(href="/#{channel.name}")= channel.name
+  .span5.well
+    h4 Create/Join Channel
+    form.form-inline.form-horizontal
+      .control-group
+        label.control-label(for="channel_name") Repository Name
+        .controls
+          input#channel_name(size="30",name="channel[name]",type="text")
+      .control-group
+        .controls
+          button.btn(name="button",type="submit") Join Channel

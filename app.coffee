@@ -84,9 +84,19 @@ requireLogin = (req, res, next) ->
     res.send(403)
 
 app.get '/', (req, res) ->
-  res.render 'index',
-    title: 'Home'
-    user: req.user
+  if req.user
+    Channel
+      .find
+        users: req.user._id
+      .exec (err, channels) ->
+        res.render 'index',
+          title: 'Home'
+          user: req.user
+          channels: channels
+  else
+    res.render 'home',
+      title: 'Home'
+      user: null
 
 app.get '/logout', (req, res) ->
   req.logout();
