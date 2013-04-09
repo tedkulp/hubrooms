@@ -1,3 +1,4 @@
+_ = require('underscore')
 mongoose = require 'mongoose'
 Schema = mongoose.Schema
 ObjectId = Schema.ObjectId
@@ -11,13 +12,22 @@ ChannelSchema = new Schema
 ChannelSchema.plugin timestamps, { created: "created_at", lastUpdated: "updated_at" }
 ChannelSchema.plugin findOrCreate
 
-ChannelModel = mongoose.model('Channel', ChannelSchema)
+ChannelSchema.methods.addUser = (user, callback) ->
+  @users.push user._id
+  @save (err, data) ->
+    callback(err, data) if callback?
 
-ChannelModel.createChannel = (name, user, callback) ->
+ChannelSchema.methods.removeUser = (user, callback) ->
+  @users = _.filter @users, (itrUser) ->
+    String(itrUser) != String(user._id)
+  @save (err, data) ->
+    callback(err, data) if callback?
+
+ChannelSchema.statics.createChannel = (name, user, callback) ->
   channel = new ChannelModel
     name: name
     users: [ user._id ]
   channel.save (err, chnl) ->
     callback(err, chnl) if callback?
 
-module.exports = ChannelModel
+module.exports = ChannelModel = mongoose.model('Channel', ChannelSchema)

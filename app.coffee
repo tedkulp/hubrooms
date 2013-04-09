@@ -163,6 +163,18 @@ renderChat = (req, res, user) ->
     title: 'Chat'
     user: user
 
+app.get /^\/(?!(?:css|js|img))([^\/]+)\/([^\/]+)\/leave$/, requireLogin, (req, res) ->
+  channelName = "#{req.params[0]}/#{req.params[1]}"
+  Channel
+    .findOne
+      name: channelName
+    .exec (err, channel) ->
+      if channel?
+        channel.removeUser req.user, (err, data) ->
+          res.redirect '/'
+      else
+        res.redirect '/'
+
 app.get /^\/(?!(?:css|js|img))([^\/]+)\/([^\/]+)$/, requireLogin, (req, res) ->
   github.authenticate
     type: 'oauth'
