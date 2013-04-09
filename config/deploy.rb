@@ -5,7 +5,7 @@ require 'capistrano/ext/multistage'
 require 'capistrano/chef'
 
 set :application, "hubrooms"
-set :repository,  "git@git.shiftrefresh.net:hubrooms-node.git"
+set :repository,  "git@git.shiftrefresh.net:hubrooms/hubrooms-node.git"
 set :deploy_to,   "/opt/hubrooms/app"
 
 set :use_sudo, false
