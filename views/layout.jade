@@ -28,20 +28,18 @@ html
             span.icon-bar
             span.icon-bar
             span.icon-bar
-          a.brand(href='/') Project Name
+          a.brand(href='/') Hu<span style="font-size: 80%;">&beta;</span>Rooms
           .nav-collapse.collapse
-            ul.nav
-              li.active
-                a(href='#') Home
-              li
-                a(href='#') About
-              li
-                a(href='#') Contact
-            ul.nav.pull-right
-              li
-                if user
-                  a(href='/logout') Signed in as: #{user.name}
-                else
+            if user
+              ul.nav.pull-right
+                li.dropdown
+                  a#sign-in-label.dropdown-toggle(data-toggle="dropdown",role="button",href="#") Signed in as: #{user.name}
+                  ul.dropdown-menu(role="menu",aria-labelledby="sign-in-label")
+                    li(role="presentation")
+                      a(href='/logout',role="menuitem") Sign Out
+            else
+              ul.nav.pull-right
+                li
                   a(href='/auth/github') Sign In w/ Github
 
     .container-fluid
