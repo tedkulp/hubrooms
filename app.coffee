@@ -26,35 +26,9 @@ github = new githubApi
 
 mongoose.connect(nconf.get('mongoUri'))
 
-passport = require 'passport'
-GitHubStrategy = require('passport-github').Strategy
-
-passport.serializeUser (user, done) ->
-  done(null, user)
-
-passport.deserializeUser (obj, done) ->
-  done(null, obj)
-
-passport.use new GitHubStrategy
-  clientID: nconf.get('githubClientId')
-  clientSecret: nconf.get('githubClientSecret')
-  callbackURL: nconf.get('githubCallback')
-, (accessToken, refreshToken, profile, done) ->
-  User.findOrCreate
-    external_id: profile.id
-  ,
-    login: profile.username
-    name: profile.displayName
-    location: profile._json.location
-    email: profile._json.email
-    url: profile.profileUrl
-    access_token: accessToken
-    refresh_token: refreshToken
-  ,
-    upsert: true
-  ,
-    (err, user) ->
-      done(null, user) unless err
+# Include all the passport stuff for talking
+# with GitHub
+passport = require('./passport')(app, nconf)
 
 app.configure ->
   app.set('views', __dirname + '/views')
@@ -68,10 +42,7 @@ app.configure ->
     store: new RedisStore
       client: RedisClient
 
-  # Initialize Passport!  Also use passport.session() middleware, to support
-  # persistent login sessions (recommended).
-  app.use(passport.initialize())
-  app.use(passport.session())
+  passport.configure()
 
   app.use require('connect-assets')()
 
@@ -82,6 +53,8 @@ app.configure ->
     redisPub: redis.createClient(nconf.get('redisPort'), nconf.get('redisHost'))
     redisSub: redis.createClient(nconf.get('redisPort'), nconf.get('redisHost'))
     redisClient: redis.createClient(nconf.get('redisPort'), nconf.get('redisHost'))
+
+passport.setup()
 
 requireLogin = (req, res, next) ->
   if req.session and req.session.passport and req.session.passport.user
@@ -107,16 +80,6 @@ app.get '/', (req, res) ->
 app.get '/logout', (req, res) ->
   req.logout();
   res.redirect '/'
-
-app.get '/auth/github',
-  passport.authenticate('github'),
-  (req, res) ->
-    # Never called
-
-app.get '/auth/github/callback',
-  passport.authenticate('github', { failureRedirect: '/login' }),
-  (req, res) ->
-    res.redirect('/')
 
 app.get '/channels', requireLogin, (req, res) ->
   Channel
@@ -277,8 +240,8 @@ gracefulShutdown = ->
 process.on 'SIGINT', ->
   gracefulShutdown()
 
-process.on 'uncaughtException', (err) ->
-  console.log "Uncaught Exception:", err
-  gracefulShutdown()
+# process.on 'uncaughtException', (err) ->
+#   console.log "Uncaught Exception:", err
+#   gracefulShutdown()
 
 app.listen(nconf.get('port'))
