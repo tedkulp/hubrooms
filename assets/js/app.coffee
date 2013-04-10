@@ -294,6 +294,22 @@ Hubrooms.on 'initialize:after', ->
       else
         # Handle the highlighting if name is mentioned
 
+  Socket.on 'add-user', (data) ->
+    user = new Hubrooms.Models.User(data.user)
+    channel = new Hubrooms.Models.Channel(data.channel)
+    if user? and channel?
+      currentChannel = Hubrooms.controller.channels.findCurrent()
+      if currentChannel.get('_id') == channel.get('_id')
+        Hubrooms.controller.users.add(user)
+
+  Socket.on 'remove-user', (data) ->
+    user = new Hubrooms.Models.User(data.user)
+    channel = new Hubrooms.Models.Channel(data.channel)
+    if user? and channel?
+      currentChannel = Hubrooms.controller.channels.findCurrent()
+      if currentChannel.get('_id') == channel.get('_id')
+        Hubrooms.controller.users.remove(Hubrooms.controller.users.where({_id: user.get('_id')}))
+
   window.Hubrooms = Hubrooms
   window.Socket = Socket
 

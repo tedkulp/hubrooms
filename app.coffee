@@ -126,11 +126,15 @@ renderChat = (req, res, user) ->
     title: 'Chat'
     user: user
 
+#Setup all the sockets.io stuff
+websockets = require('./websockets')(app, RedisClient).setup()
+
 app.get /^\/(?!(?:css|js|img))([^\/]+)\/([^\/]+)\/leave$/, requireLogin, (req, res) ->
   channelName = "#{req.params[0]}/#{req.params[1]}"
   Channel.findChannelByName channelName, (err, channel) ->
     if channel?
       channel.removeUser req.user, (err, data) ->
+        websockets.userRemovedFromChannel(req.user, channel)
         res.redirect '/'
     else
       res.redirect '/'
@@ -160,6 +164,7 @@ app.get /^\/(?!(?:css|js|img))([^\/]+)\/([^\/]+)$/, requireLogin, (req, res) ->
             renderChat req, res, req.user
           else
             channel.addUser req.user, (err, user) ->
+              websockets.userAddedToChannel(req.user, channel)
               renderChat req, res, user
 
         # It doesn't exist -- we have to create the channel first
@@ -174,10 +179,8 @@ app.get /^\/(?!(?:css|js|img))([^\/]+)\/([^\/]+)$/, requireLogin, (req, res) ->
           else
             Channel.createChannel channelName, req.user, (err, channel) ->
               unless err?
+                websockets.userAddedToChannel(req.user, channel)
                 renderChat req, res, req.user
-
-#Setup all the sockets.io stuff
-websockets = require('./websockets')(app, RedisClient).setup()
 
 gracefulShutdown = ->
   console.log "shutdown"

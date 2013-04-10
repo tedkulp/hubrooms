@@ -51,3 +51,13 @@ module.exports = (app, RedisClient) ->
 
   sessions: ->
     @openSessions
+
+  userAddedToChannel: (user, channel) ->
+    app.io.room(channel._id).broadcast 'add-user',
+      user: user
+      channel: channel
+
+  userRemovedFromChannel: (user, channel) ->
+    app.io.room(channel._id).broadcast 'remove-user',
+      user: user
+      channel: channel
