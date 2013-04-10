@@ -13,11 +13,13 @@ block content
             a(href="/#{channel.name}")= channel.name
   .span5.well
     h4 Create/Join Channel
-    form.form-inline.form-horizontal
+    form#create-channel.form-inline.form-horizontal
       .control-group
-        label.control-label(for="channel_name") Repository Name
+        label.control-label(for="channel-name") Repository Name
         .controls
-          input#channel_name(size="30",name="channel[name]",type="text")
+          input#channel-name(size="30",name="channel[name]",type="text")
       .control-group
         .controls
           button.btn(name="button",type="submit") Join Channel
+
+  != js('index')
