@@ -39,7 +39,7 @@ Hubrooms.module 'Models', (module, App, Backbone, Marionette, $, _) ->
 
   class module.Message extends Backbone.Model
     url: '/messages'
-    defaults:
+    defaults: ->
       msg: null
       channel_id: null
       login: null

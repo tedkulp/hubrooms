@@ -116,6 +116,7 @@ app.post '/messages', requireLogin, (req, res) ->
   message.user_id = req.user['_id']
   message.login = req.user.login
   message.name = req.user.name
+  message.created_at = message.updated_at = new Date() # We don't trust clients
   message.save (err) ->
     res.json(message)
     unless err
