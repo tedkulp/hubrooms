@@ -128,15 +128,12 @@ renderChat = (req, res, user) ->
 
 app.get /^\/(?!(?:css|js|img))([^\/]+)\/([^\/]+)\/leave$/, requireLogin, (req, res) ->
   channelName = "#{req.params[0]}/#{req.params[1]}"
-  Channel
-    .findOne
-      name: channelName
-    .exec (err, channel) ->
-      if channel?
-        channel.removeUser req.user, (err, data) ->
-          res.redirect '/'
-      else
+  Channel.findChannelByName channelName, (err, channel) ->
+    if channel?
+      channel.removeUser req.user, (err, data) ->
         res.redirect '/'
+    else
+      res.redirect '/'
 
 app.get /^\/(?!(?:css|js|img))([^\/]+)\/([^\/]+)$/, requireLogin, (req, res) ->
   github.authenticate
@@ -154,33 +151,30 @@ app.get /^\/(?!(?:css|js|img))([^\/]+)\/([^\/]+)$/, requireLogin, (req, res) ->
         user: req.user
     else
       channelName = "#{req.params[0]}/#{req.params[1]}"
-      Channel
-        .findOne
-          name: channelName
-        .exec (err, channel) ->
-          # Does it exist? Are they a member of this channel yet?
-          if !err? and channel?
-            foundUser = _.find channel.users, (channelUser) ->
-              String(channelUser) == String(req.user._id)
-            if foundUser?
-              renderChat req, res, req.user
-            else
-              channel.addUser req.user, (err, user) ->
-                renderChat req, res, user
+      Channel.findChannelByName channelName, (err, channel) ->
+        # Does it exist? Are they a member of this channel yet?
+        if !err? and channel?
+          foundUser = _.find channel.users, (channelUser) ->
+            String(channelUser) == String(req.user._id)
+          if foundUser?
+            renderChat req, res, req.user
+          else
+            channel.addUser req.user, (err, user) ->
+              renderChat req, res, user
 
-          # It doesn't exist -- we have to create the channel first
-          else if !err?
-            if !req.param('force_create')? and (githubChannelData.parent? or githubChannelData.source?)
-              res.render 'ask-for-parent.jade',
-                title: 'Ask for Parent'
-                user: req.user
-                channelName: channelName
-                sourceName: githubChannelData.source.full_name
-                parentName: githubChannelData.parent.full_name
-            else
-              Channel.createChannel channelName, req.user, (err, channel) ->
-                unless err?
-                  renderChat req, res, req.user
+        # It doesn't exist -- we have to create the channel first
+        else if !err?
+          if !req.param('force_create')? and (githubChannelData.parent? or githubChannelData.source?)
+            res.render 'ask-for-parent.jade',
+              title: 'Ask for Parent'
+              user: req.user
+              channelName: channelName
+              sourceName: githubChannelData.source.full_name
+              parentName: githubChannelData.parent.full_name
+          else
+            Channel.createChannel channelName, req.user, (err, channel) ->
+              unless err?
+                renderChat req, res, req.user
 
 #Setup all the sockets.io stuff
 websockets = require('./websockets')(app, RedisClient).setup()

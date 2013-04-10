@@ -30,4 +30,18 @@ ChannelSchema.statics.createChannel = (name, user, callback) ->
   channel.save (err, chnl) ->
     callback(err, chnl) if callback?
 
+ChannelSchema.statics.findChannelByName = (channelName, callback) ->
+  ChannelModel
+    .findOne
+      name: channelName
+    .exec (err, channel) ->
+      callback(err, channel)
+
+ChannelSchema.statics.findChannelsByJoinedUser = (user, callback) ->
+  ChannelModel
+    .find
+      users: user._id
+    .exec (err, channels) ->
+      callback(err, channels)
+
 module.exports = ChannelModel = mongoose.model('Channel', ChannelSchema)

@@ -6,13 +6,10 @@ module.exports = (app, RedisClient) ->
     @openSessions = new Object
 
     findChannels = (user, callback, socket, clientCount) ->
-      Channel
-        .find
-          users: user._id
-        .exec (err, channels) ->
-          if !err and channels
-            _.each channels, (channel) ->
-              callback(user, channel, socket, clientCount)
+      Channel.findChannelsByJoinedUser user, (err, channels) ->
+        if !err and channels
+          _.each channels, (channel) ->
+            callback(user, channel, socket, clientCount)
 
     joinChannel = (user, channel, socket) =>
       # console.log "joining channel", channel.name, user._id
