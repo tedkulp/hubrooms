@@ -18,6 +18,8 @@
     "connect-redis" : "*",
     "stylus" : "*",
     "nconf" : "*",
-    "github" : "*"
+    "github" : "*",
+    "node-uuid" : "*",
+    "promised-io" : "*"
   }
 }

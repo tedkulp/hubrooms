@@ -4,6 +4,9 @@ app = express().http().io()
 mongoose = require('mongoose')
 nconf = require('nconf')
 githubApi = require('github')
+processId = require('node-uuid').v4()
+def = require("promised-io/promise").Deferred
+console.log "Process ID: ", processId
 
 # Load models
 User = require('./models/user')
@@ -14,6 +17,27 @@ Message = require('./models/message')
 redis = require('redis')
 RedisStore = require('connect-redis')(express)
 RedisClient = redis.createClient(nconf.get('redisPort'), nconf.get('redisHost'), { ttl: 3600 * 24 })
+
+reconcileSha = ->
+  reconcileFunction = "
+    local keys_to_remove = redis.call('KEYS', 'user:*')
+    for i=1, #keys_to_remove do
+      redis.call('DEL', keys_to_remove[i])
+    end
+
+    local processes = redis.call('KEYS', 'process:*')
+    for i=1, #processes do
+      local users_in_process = redis.call('LRANGE', processes[i], 0, -1)
+      for j=1, #users_in_process do
+        redis.call('INCR', 'user:' .. users_in_process[j])
+      end
+    end
+  "
+
+  dfd = new def()
+  RedisClient.script 'load', reconcileFunction, (err, res) ->
+    dfd.resolve(res)
+  dfd.promise
 
 # Grab all our config vars
 nconf.argv()
@@ -128,7 +152,7 @@ renderChat = (req, res, user) ->
     user: user
 
 #Setup all the sockets.io stuff
-websockets = require('./websockets')(app, RedisClient).setup()
+websockets = require('./websockets')(app, RedisClient, processId, reconcileSha).setup()
 
 app.get /^\/(?!(?:css|js|img))([^\/]+)\/([^\/]+)\/leave$/, requireLogin, (req, res) ->
   channelName = "#{req.params[0]}/#{req.params[1]}"
@@ -183,23 +207,34 @@ app.get /^\/(?!(?:css|js|img))([^\/]+)\/([^\/]+)$/, requireLogin, (req, res) ->
                 websockets.userAddedToChannel(req.user, channel)
                 renderChat req, res, req.user
 
-gracefulShutdown = ->
-  console.log "shutdown"
-  _.each websockets.sessions(), (user, socketId) ->
-    # console.log "decr on #{user._id}"
-    RedisClient.decr('user-' + user._id)
-    _.each user.channelIds, (channelId) ->
-      # console.log "srem on #{channelId}, #{user._id}"
-      RedisClient.srem('channel-' + channelId, user._id)
-  setTimeout ->
-    process.exit()
-  , 500
+setInterval ->
+  RedisClient.expire "process:#{processId}", 30
+, 30 * 1000
 
-process.on 'SIGINT', ->
-  gracefulShutdown()
+reconcileSha().then (sha) ->
+  setInterval ->
+    RedisClient.evalsha sha, 0, (err, res) ->
+      # Nothign for now
+  , 15 * 1000
+
+gracefulShutdown = (callback) ->
+  console.log "shutdown"
+  reconcileSha().then (sha) ->
+    RedisClient.del("process:#{processId}")
+    RedisClient.evalsha sha, 0, (err, res) ->
+      callback() if callback?
+
+process.once 'SIGINT', ->
+  gracefulShutdown ->
+    process.kill(process.pid, 'SIGINT')
+
+process.once 'SIGUSR2', ->
+  gracefulShutdown ->
+    process.kill(process.pid, 'SIGUSR2')
 
 process.on 'uncaughtException', (err) ->
   console.log "Uncaught Exception:", err
-  gracefulShutdown()
+  gracefulShutdown ->
+    process.exit()
 
 app.listen(nconf.get('port'))

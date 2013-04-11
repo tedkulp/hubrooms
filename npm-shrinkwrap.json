@@ -133,7 +133,7 @@
           "version": "0.2.3"
         },
         "passport-oauth": {
-          "version": "0.1.14",
+          "version": "0.1.15",
           "dependencies": {
             "oauth": {
               "version": "0.9.10"
@@ -283,7 +283,7 @@
       "version": "0.1.2"
     },
     "redis": {
-      "version": "0.8.2"
+      "version": "0.8.3"
     },
     "connect-redis": {
       "version": "1.4.5",
@@ -334,6 +334,12 @@
     },
     "github": {
       "version": "0.1.8"
+    },
+    "node-uuid": {
+      "version": "1.4.0"
+    },
+    "promised-io": {
+      "version": "0.3.3"
     }
   }
 }

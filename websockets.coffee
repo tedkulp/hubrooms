@@ -1,7 +1,7 @@
 Channel = require('./models/channel')
 _ = require('underscore')
 
-module.exports = (app, RedisClient) ->
+module.exports = (app, RedisClient, processId, reconcileSha) ->
   setup: ->
     @openSessions = new Object
 
@@ -24,29 +24,46 @@ module.exports = (app, RedisClient) ->
 
     app.io.sockets.on 'connection', (socket) =>
       if socket.handshake.session and socket.handshake.session.passport
+        user = socket.handshake.session.passport.user
+        socketId = socket.id
+
         @openSessions[socket.id] = socket.handshake.session.passport.user
         @openSessions[socket.id].channelIds ||= []
 
-        RedisClient.incr('user-' + socket.handshake.session.passport.user._id)
-        RedisClient.get 'user-' + socket.handshake.session.passport.user._id, (err, value) ->
-          if err or !value
-            value = 0
+        RedisClient.lpush "process:#{processId}", user._id
+        RedisClient.expire "process:#{processId}", 30
 
-          findChannels(socket.handshake.session.passport.user, joinChannel, socket, value)
+        reconcileSha().then (sha) ->
+          RedisClient.evalsha sha, 0, (err, res) ->
+          # Nothing for now
+
+        # RedisClient.incr('user-' + socket.handshake.session.passport.user._id)
+        # RedisClient.get 'user-' + socket.handshake.session.passport.user._id, (err, value) ->
+        #   if err or !value
+        #     value = 0
+
+        #   findChannels(socket.handshake.session.passport.user, joinChannel, socket, value)
 
       socket.on 'disconnect', =>
         if socket.handshake.session and socket.handshake.session.passport
           user = socket.handshake.session.passport.user
           socketId = socket.id
 
-          RedisClient.decr('user-' + user._id)
-          RedisClient.get 'user-' + user._id, (err, value) =>
-            if err or !value
-              value = 0
+          RedisClient.lrem "process:#{processId}", 1, user._id
+          RedisClient.expire "process:#{processId}", 30
 
-            findChannels(user, leaveChannel, socketId, value)
+          reconcileSha().then (sha) ->
+            RedisClient.evalsha sha, 0, (err, res) ->
+              # Nothign for now
 
-            delete @openSessions[socketId]
+          # RedisClient.decr('user-' + user._id)
+          # RedisClient.get 'user-' + user._id, (err, value) =>
+          #   if err or !value
+          #     value = 0
+
+          #   findChannels(user, leaveChannel, socketId, value)
+
+          #   delete @openSessions[socketId]
     @
 
   sessions: ->
