@@ -192,9 +192,13 @@ Hubrooms.module 'Views', (module, App, Backbone, Marionette, $, _) ->
       if imgResp != resp
         resp = imgResp
       else
-        linkResp = @replaceURLWithHTMLLinks(resp)
-        if linkResp != resp
-          resp = linkResp
+        youtubeResp = @replaceURLWithYoutubeEmbeds(resp)
+        if youtubeResp != resp
+          resp = youtubeResp
+        else
+          linkResp = @replaceURLWithHTMLLinks(resp)
+          if linkResp != resp
+            resp = linkResp
 
       resp = @replaceTextWithEmoticons(resp)
       resp = @replaceTextWithEmoji(resp)
@@ -210,6 +214,11 @@ Hubrooms.module 'Views', (module, App, Backbone, Marionette, $, _) ->
     replaceURLWithImageTags: (text) ->
       text.replace @imgRegex, (match, m0) ->
         "<a href='#{m0}' target='_blank'><img src='#{m0}' alt='' border='0' align='absmiddle' /></a>"
+
+    replaceURLWithYoutubeEmbeds: (text) ->
+      text.replace @youtubeRegex, (match, m0) ->
+        "<iframe width='299' height='182' src='http://www.youtube.com/embed/" + m0 + "?rel=0' frameborder='0' allowfullscreen></iframe>"
+
 
     replaceTextWithEmoticons: (text) ->
       text.replace @emoticonsRegex, (match) =>
