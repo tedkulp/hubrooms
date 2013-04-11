@@ -12,9 +12,12 @@ module.exports = (app, RedisClient, processId, reconcileSha) ->
     joinChannel = (user, channel, socket) =>
       if socket?
         socket.join(channel['_id'])
+      @userActiveInChannel(user, channel)
 
-    leaveChannel = (user, channel, socketId, clientCount) ->
-      # Nothing for now
+    leaveChannel = (user, channel, socketId, clientCount) =>
+      if socket?
+        socket.leave(channel['_id'])
+      @userInactiveInChannel(user, channel)
 
     app.io.sockets.on 'connection', (socket) =>
       if socket.handshake.session and socket.handshake.session.passport
@@ -41,15 +44,22 @@ module.exports = (app, RedisClient, processId, reconcileSha) ->
 
           reconcileSha().then (sha) ->
             RedisClient.evalsha sha, 0, (err, res) ->
-              # Not running all this because leaveChannel is no-op.
-              # If that changes, uncomment this.
-              #
-              # RedisClient.get "user:", (err, value) ->
-              #   if err or !value
-              #     value = 0
-              #   findChannels(user, leaveChannel, socketId, value)
+              RedisClient.get "user:", (err, value) ->
+                if err or !value
+                  value = 0
+                findChannels(user, leaveChannel, socketId, value)
 
     @
+
+  userActiveInChannel: (user, channel) ->
+    app.io.room(channel._id).broadcast 'active-user',
+      user: user
+      channel: channel
+
+  userInactiveInChannel: (user, channel) ->
+    app.io.room(channel._id).broadcast 'inactive-user',
+      user: user
+      channel: channel
 
   userAddedToChannel: (user, channel) ->
     app.io.room(channel._id).broadcast 'add-user',

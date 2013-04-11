@@ -121,12 +121,14 @@ app.get '/channel_users', requireLogin, (req, res) ->
     .populate('users')
     .exec (err, channel) ->
       #TODO: Handle error
-      RedisClient.smembers 'channel-' + req.param('channel_id'), (err, value) ->
-        res.json _.map _.first(channel).users, (user) ->
-          _.chain(user.toObject())
-            .tap (theUser) ->
-              theUser.present = _.contains(value, String(user._id))
-            .value()
+      users = _.map _.first(channel).users, (user) ->
+        user.toObject()
+      RedisClient.multi(_.map users, (user) ->
+        ["get", "user:#{user._id}"]
+      ).exec (err, replies) ->
+        _.each users, (e, i) ->
+          users[i].present = replies[i] != null and replies[i] > 0
+        res.json users
 
 app.get '/messages', requireLogin, (req, res) ->
   Message

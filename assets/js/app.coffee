@@ -9,6 +9,7 @@ Hubrooms.addRegions
 
 Hubrooms.module 'Models', (module, App, Backbone, Marionette, $, _) ->
   class module.Channel extends Backbone.Model
+    idAttribute: "_id"
     isCurrent: ->
       Backbone.history.fragment == @get('name')
 
@@ -39,6 +40,7 @@ Hubrooms.module 'Models', (module, App, Backbone, Marionette, $, _) ->
 
   class module.Message extends Backbone.Model
     url: '/messages'
+    idAttribute: "_id"
     defaults: ->
       msg: null
       channel_id: null
@@ -47,9 +49,9 @@ Hubrooms.module 'Models', (module, App, Backbone, Marionette, $, _) ->
       created_at: new Date()
       updated_at: new Date()
 
-  validate: (attrs) ->
-    if !attrs or attrs.msg == ''
-      'No Msg Given'
+    validate: (attrs) ->
+      if !attrs or attrs.msg == ''
+        'No Msg Given'
 
   class module.Messages extends Backbone.Collection
     model: module.Message
@@ -58,6 +60,9 @@ Hubrooms.module 'Models', (module, App, Backbone, Marionette, $, _) ->
     channelId: ''
 
   class module.User extends Backbone.Model
+    idAttribute: "_id"
+    isPresent: ->
+      @get('present')
 
   class module.Users extends Backbone.Collection
     model: module.User
@@ -69,6 +74,10 @@ Hubrooms.module 'Views', (module, App, Backbone, Marionette, $, _) ->
     template: '#channel-user-item'
     tagName: 'li'
     className: 'channelUserItem'
+    initialize: ->
+      @listenTo(@model, 'change', @render)
+    onRender: ->
+      $(@el).toggleClass('inactive', !@model.isPresent())
 
   class module.UserList extends Marionette.CollectionView
     itemView: module.ChannelUserItem
@@ -309,6 +318,22 @@ Hubrooms.on 'initialize:after', ->
       currentChannel = Hubrooms.controller.channels.findCurrent()
       if currentChannel.get('_id') == channel.get('_id')
         Hubrooms.controller.users.remove(Hubrooms.controller.users.where({_id: user.get('_id')}))
+
+  Socket.on 'active-user', (data) ->
+    user = new Hubrooms.Models.User(data.user)
+    channel = new Hubrooms.Models.Channel(data.channel)
+    if user? and channel?
+      currentChannel = Hubrooms.controller.channels.findCurrent()
+      if currentChannel.get('_id') == channel.get('_id')
+        Hubrooms.controller.users.get(user).set('present', true)
+
+  Socket.on 'inactive-user', (data) ->
+    user = new Hubrooms.Models.User(data.user)
+    channel = new Hubrooms.Models.Channel(data.channel)
+    if user? and channel?
+      currentChannel = Hubrooms.controller.channels.findCurrent()
+      if currentChannel.get('_id') == channel.get('_id')
+        Hubrooms.controller.users.get(user).set('present', false)
 
   window.Hubrooms = Hubrooms
   window.Socket = Socket
