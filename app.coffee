@@ -9,7 +9,6 @@ def = require("promised-io/promise").Deferred
 console.log "Process ID: ", processId
 
 SDC = require('statsd-client')
-sdc = new SDC({host: 'localhost', port: 8125, debug: true})
 
 # Load models
 User = require('./models/user')
@@ -52,6 +51,7 @@ github = new githubApi
   version: '3.0.0'
 
 mongoose.connect(nconf.get('mongoUri'))
+sdc = new SDC({host: nconf.get('statsdHost'), port: nconf.get('statsdPort'), debug: (nconf.get('statsdDebug') == "true")})
 
 # Include all the passport stuff for talking
 # with GitHub
