@@ -18,7 +18,7 @@ Message = require('./models/message')
 # Setup redis
 redis = require('redis')
 RedisStore = require('connect-redis')(express)
-RedisClient = redis.createClient(nconf.get('redisPort'), nconf.get('redisHost'), { ttl: 3600 * 24 })
+RedisClient = redis.createClient(nconf.get('redisPort'), nconf.get('redisHost'))
 
 reconcileSha = ->
   reconcileFunction = "
