@@ -340,6 +340,9 @@
     },
     "promised-io": {
       "version": "0.3.3"
+    },
+    "statsd-client": {
+      "version": "0.0.12"
     }
   }
 }

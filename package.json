@@ -20,6 +20,7 @@
     "nconf" : "*",
     "github" : "*",
     "node-uuid" : "*",
-    "promised-io" : "*"
+    "promised-io" : "*",
+    "statsd-client" : "*"
   }
 }

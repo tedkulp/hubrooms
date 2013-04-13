@@ -8,6 +8,9 @@ processId = require('node-uuid').v4()
 def = require("promised-io/promise").Deferred
 console.log "Process ID: ", processId
 
+SDC = require('statsd-client')
+sdc = new SDC({host: 'localhost', port: 8125, debug: true})
+
 # Load models
 User = require('./models/user')
 Channel = require('./models/channel')
@@ -87,6 +90,7 @@ requireLogin = (req, res, next) ->
     res.send(403)
 
 app.get '/', (req, res) ->
+  start = new Date()
   if req.user
     Channel
       .find
@@ -96,24 +100,32 @@ app.get '/', (req, res) ->
           title: 'Home'
           user: req.user
           channels: channels
+        sdc.increment('home.user.visit')
+        sdc.timing('home.user.time', start)
   else
     res.render 'home',
       title: 'Home'
       user: null
+    sdc.increment('home.anonymous.visit')
+    sdc.timing('home.anonymous.time', start)
 
 app.get '/logout', (req, res) ->
   req.logout();
   res.redirect '/'
+  sdc.increment('logout.count')
 
 app.get '/channels', requireLogin, (req, res) ->
+  start = new Date()
   Channel
     .find
       users: req.session.passport.user._id
     .exec (err, channels) ->
       res.json(channels)
+      sdc.timing('channels.received.time', start)
 
 app.get '/channel_users', requireLogin, (req, res) ->
   #TODO> Handle no channel_id passed
+  start = new Date()
   Channel
     .find
       _id: req.param('channel_id')
@@ -129,15 +141,19 @@ app.get '/channel_users', requireLogin, (req, res) ->
         _.each users, (e, i) ->
           users[i].present = replies[i] != null and replies[i] > 0
         res.json users
+        sdc.timing('channel_users.received.time', start)
 
 app.get '/messages', requireLogin, (req, res) ->
+  start = new Date()
   Message
     .find
       channel_id: req.param('channel_id')
     .exec (err, messages) ->
       res.json(messages)
+      sdc.timing('messages.received.time', start)
 
 app.post '/messages', requireLogin, (req, res) ->
+  start = new Date()
   message = new Message(req.body)
   message.user_id = req.user['_id']
   message.login = req.user.login
@@ -147,6 +163,8 @@ app.post '/messages', requireLogin, (req, res) ->
     res.json(message)
     unless err
       app.io.room(message.channel_id).broadcast('new-message', message)
+    sdc.increment('message.sent.count')
+    sdc.timing('messages.sent.time', start)
 
 renderChat = (req, res, user) ->
   res.render 'chat',
@@ -157,16 +175,20 @@ renderChat = (req, res, user) ->
 websockets = require('./websockets')(app, RedisClient, processId, reconcileSha).setup()
 
 app.get /^\/(?!(?:css|js|img))([^\/]+)\/([^\/]+)\/leave$/, requireLogin, (req, res) ->
+  start = new Date()
   channelName = "#{req.params[0]}/#{req.params[1]}"
   Channel.findChannelByName channelName, (err, channel) ->
     if channel?
       channel.removeUser req.user, (err, data) ->
         websockets.userRemovedFromChannel(req.user, channel)
         res.redirect '/'
+        sdc.increment('channel.left.count')
+        sdc.timing('channel.left.time', start)
     else
       res.redirect '/'
 
 app.get /^\/(?!(?:css|js|img))([^\/]+)\/([^\/]+)$/, requireLogin, (req, res) ->
+  start = new Date()
   github.authenticate
     type: 'oauth'
     token: req.user.access_token
@@ -180,6 +202,8 @@ app.get /^\/(?!(?:css|js|img))([^\/]+)\/([^\/]+)$/, requireLogin, (req, res) ->
       res.render '404-nochannel.jade',
         title: 'Repository Does Not Exist/No Permission'
         user: req.user
+        sdc.increment('channel.404.count')
+        sdc.timing('channel.404.time', start)
     else
       channelName = "#{req.params[0]}/#{req.params[1]}"
       Channel.findChannelByName channelName, (err, channel) ->
@@ -189,10 +213,14 @@ app.get /^\/(?!(?:css|js|img))([^\/]+)\/([^\/]+)$/, requireLogin, (req, res) ->
             String(channelUser) == String(req.user._id)
           if foundUser?
             renderChat req, res, req.user
+            sdc.increment('channel.render.count')
+            sdc.timing('channel.render.time', start)
           else
             channel.addUser req.user, (err, user) ->
               websockets.userAddedToChannel(req.user, channel)
               renderChat req, res, user
+              sdc.increment('channel.join.count')
+              sdc.timing('channel.join.time', start)
 
         # It doesn't exist -- we have to create the channel first
         else if !err?
@@ -208,6 +236,8 @@ app.get /^\/(?!(?:css|js|img))([^\/]+)\/([^\/]+)$/, requireLogin, (req, res) ->
               unless err?
                 websockets.userAddedToChannel(req.user, channel)
                 renderChat req, res, req.user
+                sdc.increment('channel.create.count')
+                sdc.timing('channel.create.time', start)
 
 setInterval ->
   RedisClient.expire "process:#{processId}", 30
