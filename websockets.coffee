@@ -1,7 +1,7 @@
 Channel = require('./models/channel')
 _ = require('underscore')
 
-module.exports = (app, RedisClient, processId, reconcileSha) ->
+module.exports = (app, RedisClient, processId, reconcileSha, sdc) ->
   setup: ->
     findChannels = (user, callback, socket, clientCount) ->
       Channel.findChannelsByJoinedUser user, (err, channels) ->
@@ -13,11 +13,13 @@ module.exports = (app, RedisClient, processId, reconcileSha) ->
       if socket?
         socket.join(channel['_id'])
       @userActiveInChannel(user, channel)
+      sdc.increment('websocket.join.count')
 
     leaveChannel = (user, channel, socketId, clientCount) =>
       if socket?
         socket.leave(channel['_id'])
       @userInactiveInChannel(user, channel)
+      sdc.increment('websocket.leave.count')
 
     app.io.sockets.on 'connection', (socket) =>
       if socket.handshake.session and socket.handshake.session.passport
@@ -34,6 +36,8 @@ module.exports = (app, RedisClient, processId, reconcileSha) ->
                 value = 0
               findChannels(socket.handshake.session.passport.user, joinChannel, socket, value)
 
+        sdc.increment('websocket.connection.count')
+
       socket.on 'disconnect', =>
         if socket.handshake.session and socket.handshake.session.passport
           user = socket.handshake.session.passport.user
@@ -48,6 +52,8 @@ module.exports = (app, RedisClient, processId, reconcileSha) ->
                 if err or !value
                   value = 0
                 findChannels(user, leaveChannel, socketId, value)
+
+          sdc.increment('websocket.disconnection.count')
 
     @
 

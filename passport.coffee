@@ -2,7 +2,7 @@ passport = require 'passport'
 GitHubStrategy = require('passport-github').Strategy
 User = require('./models/user')
 
-module.exports = (app, nconf) ->
+module.exports = (app, nconf, sdc) ->
   configure: ->
     app.use(passport.initialize())
     app.use(passport.session())
@@ -45,3 +45,4 @@ module.exports = (app, nconf) ->
       passport.authenticate('github', { failureRedirect: '/login' }),
       (req, res) ->
         res.redirect('/')
+        sdc.increment('github.callback.count')
