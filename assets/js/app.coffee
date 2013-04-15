@@ -238,6 +238,16 @@ Hubrooms.module 'Views', (module, App, Backbone, Marionette, $, _) ->
     itemView: module.MessageItem
     tagName: 'table'
     className: 'table table-striped table-condensed'
+    ui:
+      messages : '#messages'
+
+    onBeforeItemAdded: ->
+      @scrollDown = $(@ui.messages).scrollTop() == ($(@ui.messages)[0].scrollHeight - $(@ui.messages)[0].offsetHeight)
+
+    onAfterItemAdded: ->
+      if @scrollDown
+        $(@ui.messages).scrollTop($(@ui.messages)[0].scrollHeight)
+      @scrollDown = false
 
 Hubrooms.module 'Router', (module, App, Backbone, Marionette, $, _) ->
   class module.Router extends Marionette.AppRouter
