@@ -55,7 +55,7 @@ sdc = new SDC({host: nconf.get('statsdHost'), port: nconf.get('statsdPort'), deb
 
 # Include all the passport stuff for talking
 # with GitHub
-passport = require('./passport')(app, nconf, sdc)
+passport = require('./lib/passport')(app, nconf, sdc)
 
 app.configure ->
   app.set('views', __dirname + '/views')
@@ -172,7 +172,7 @@ renderChat = (req, res, user) ->
     user: user
 
 #Setup all the sockets.io stuff
-websockets = require('./websockets')(app, RedisClient, processId, reconcileSha, sdc).setup()
+websockets = require('./lib/websockets')(app, RedisClient, processId, reconcileSha, sdc).setup()
 
 app.get /^\/(?!(?:css|js|img))([^\/]+)\/([^\/]+)\/leave$/, requireLogin, (req, res) ->
   start = new Date()

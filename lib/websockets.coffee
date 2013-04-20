@@ -1,4 +1,4 @@
-Channel = require('./models/channel')
+Channel = require('../models/channel')
 _ = require('underscore')
 
 module.exports = (app, RedisClient, processId, reconcileSha, sdc) ->
