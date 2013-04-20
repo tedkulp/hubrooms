@@ -216,9 +216,9 @@ Hubrooms.module 'Views', (module, App, Backbone, Marionette, $, _) ->
         "<a href='#{m0}' target='_blank'><img src='#{m0}' alt='' border='0' align='absmiddle' /></a>"
 
     replaceURLWithYoutubeEmbeds: (text) ->
-      text.replace @youtubeRegex, (match, m0) ->
-        "<iframe width='299' height='182' src='http://www.youtube.com/embed/" + m0 + "?rel=0' frameborder='0' allowfullscreen></iframe>"
-
+      text.replace @youtubeRegex, (match, m0) =>
+        $(@el).css('min-height', '182px')
+        "<iframe width='299' height='182' src='//www.youtube.com/embed/" + m0 + "?rel=0' frameborder='0' allowfullscreen></iframe>"
 
     replaceTextWithEmoticons: (text) ->
       text.replace @emoticonsRegex, (match) =>
