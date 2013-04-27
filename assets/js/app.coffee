@@ -69,6 +69,10 @@ Hubrooms.module 'Models', (module, App, Backbone, Marionette, $, _) ->
     url: '/channel_users'
     channelId: ''
 
+    getLikeLoginNames: (loginText) ->
+      @models.filter (data) ->
+        ('@' + data.get('login').toLowerCase()).indexOf(loginText.toLowerCase()) == 0
+
 Hubrooms.module 'Views', (module, App, Backbone, Marionette, $, _) ->
   class module.ChannelUserItem extends Marionette.ItemView
     template: '#channel-user-item'
@@ -119,6 +123,36 @@ Hubrooms.module 'Views', (module, App, Backbone, Marionette, $, _) ->
       form: '#sendmsg'
       inputBox: '#sendmsginput'
       submitBtn: '#sendmsgbutton'
+
+    onRender: ->
+      currentWordRange = null
+      $(@ui.inputBox).autocomplete
+        source: (req, res) ->
+          res _.map App.controller.users.getLikeLoginNames(req.term), (item) ->
+            "@" + item.get('login')
+        autoFocus: true
+        disabled: true
+        position:
+          my: 'left bottom'
+          at: 'left top'
+        select: (e, ui) =>
+          $(@ui.inputBox).val(replaceRange($(@ui.inputBox).val(), currentWordRange.start, currentWordRange.end, ui.item.value + ": "))
+          false
+        focus: (e, ui) ->
+          false
+        close: (e, ui) =>
+          $(@ui.inputBox).autocomplete("disable", true)
+          $(@ui.inputBox).focus()
+      .bind 'keydown', (e) =>
+        if e.keyCode == 9
+          if e.preventDefault
+            e.preventDefault()
+          currentWordRange = $(@ui.inputBox).getCurrentWordRange()
+          $(@ui.inputBox).autocomplete("enable", true)
+          $(@ui.inputBox).autocomplete("search", currentWordRange.value)
+          false
+        else
+          true
 
     getCurrentChannel: ->
       App.controller.channels.getCurrentChannel()
