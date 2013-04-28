@@ -3,7 +3,7 @@ $ ->
     e.preventDefault()
     e.stopPropagation()
 
-    name = $('#channel-name').val()
+    name = _.str.trim($('#channel-name').val())
     if !name? or name == '' or !name.match(/^[^\/]+\/[^\/]+$/)
       alert 'Please enter a valid repository name in the format of "user/repo".'
     else
