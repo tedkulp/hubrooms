@@ -33,7 +33,7 @@ block content
   script#message-item(type='text/html')
     td.message_name
       strong <%= login %>:
-    td.message <%= msg %>
+    td.message <%= escapeMessage() %>
     td.message_time(data-ts!='<%= created_at %>') <%= created_at %>
 
   script#channel-user-item(type='text/html')

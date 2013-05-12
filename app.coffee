@@ -1,4 +1,5 @@
 express = require('express.io')
+connect = require('connect')
 _ = require('underscore')
 app = express().http().io()
 mongoose = require('mongoose')
@@ -6,6 +7,7 @@ nconf = require('nconf')
 githubApi = require('github')
 processId = require('node-uuid').v4()
 def = require("promised-io/promise").Deferred
+crypto = require('crypto')
 console.log "Process ID: ", processId
 
 SDC = require('statsd-client')
@@ -64,10 +66,12 @@ app.configure ->
   app.use(express.cookieParser())
   app.use(express.bodyParser())
   app.use(express.methodOverride())
+
+  redisStore = new RedisStore
+    client: RedisClient
   app.use express.session
     secret: 'nyan cat is hungry'
-    store: new RedisStore
-      client: RedisClient
+    store: redisStore
 
   passport.configure()
 
@@ -79,7 +83,36 @@ app.configure ->
   app.io.set 'store', new express.io.RedisStore
     redisPub: redis.createClient(nconf.get('redisPort'), nconf.get('redisHost'))
     redisSub: redis.createClient(nconf.get('redisPort'), nconf.get('redisHost'))
-    redisClient: redis.createClient(nconf.get('redisPort'), nconf.get('redisHost'))
+    # redisClient: redis.createClient(nconf.get('redisPort'), nconf.get('redisHost'))
+    redisClient: RedisClient # Reuse the express connection
+
+  # Code to handle a request to socket.io with just the apikey parameter
+  # For hubot-hubrooms -- more stuff later
+  # Wrap the original function from express.io in one of our own to check the 
+  # login and apikey and authorize it if it matches. Otherwise, process to the
+  # original logic.
+  origFunction = app.io.get('authorization')
+  app.io.set 'authorization', (data, next) ->
+    if data.query? and data.query.apikey? and data.query.login?
+      User.findOne
+        login: data.query.login
+        api_key: data.query.apikey
+      ,
+        (err, user) ->
+          return next 'apikey or login not valid', false if err? or !user?
+          shasum = crypto.createHash('sha1')
+          shasum.update("#{data.query.login}::#{data.query.apikey}")
+          sessionId = shasum.digest('hex')
+          data.sessionID = sessionId
+          redisStore.get sessionId, (error, session) ->
+            return next error if error?
+            sessionData =
+              passport:
+                user: user
+            data.session = new connect.session.Session data, sessionData
+            next null, true
+    else
+      return origFunction(data, next)
 
 passport.setup()
 
@@ -151,6 +184,21 @@ app.get '/messages', requireLogin, (req, res) ->
     .exec (err, messages) ->
       res.json(messages)
       sdc.timing('messages.received.time', start)
+
+app.io.route 'send-message', (req) ->
+  start = new Date()
+  message = new Message(req.data)
+  # message.user_id = req.user['_id']
+  message.user_id = req.session.passport.user._id
+  message.login = req.session.passport.user.login
+  message.name = req.session.passport.user.name
+  message.created_at = message.updated_at = new Date() # We don't trust clients
+  message.save (err) ->
+    res.json(message) if res?
+    unless err
+      app.io.room(message.channel_id).broadcast('new-message', message)
+    sdc.increment('message.sent.count')
+    sdc.timing('messages.sent.time', start)
 
 app.post '/messages', requireLogin, (req, res) ->
   start = new Date()

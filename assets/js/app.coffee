@@ -183,6 +183,27 @@ Hubrooms.module 'Views', (module, App, Backbone, Marionette, $, _) ->
       time    : '.message_time'
       message : '.message'
       name    : '.message_name'
+    templateHelpers: =>
+      view = @
+      escapeMessage: ->
+        resp = @msg
+        resp = resp.replace(/\</g, "&lt;").replace(/\>/g, "&gt;").replace(/\n/g, '<br />')
+
+        imgResp = view.replaceURLWithImageTags(resp)
+        if imgResp != resp
+          resp = imgResp
+        else
+          youtubeResp = view.replaceURLWithYoutubeEmbeds(resp)
+          if youtubeResp != resp
+            resp = youtubeResp
+          else
+            linkResp = view.replaceURLWithHTMLLinks(resp)
+            if linkResp != resp
+              resp = linkResp
+
+        resp = view.replaceTextWithEmoticons(resp)
+        resp = view.replaceTextWithEmoji(resp)
+        resp
 
     imgRegex: /(https?:\/\/\S+\.(gif|jpe?g|png))(?:\?[A-Za-z0-9_\-\=]+)?/ig
     linkRegex: /(\b(https?|ftp|file):\/\/[-A-Z0-9+&@#\/%?=~_|!:,.;]*[-A-Z0-9+&@#\/%=~_|])/ig
@@ -216,27 +237,10 @@ Hubrooms.module 'Views', (module, App, Backbone, Marionette, $, _) ->
 
     onRender: ->
       @ui.time.html(moment(@ui.time.data('ts')).format('D-MMM h:mma'))
-      @ui.message.html(@replaceMessageText(@ui.message.html()))
+      # @ui.message.html(@replaceMessageText(@ui.message.html()))
 
-    replaceMessageText: (resp) ->
-      if @containsLogin(resp, window.user_login)
+      if @containsLogin(@ui.message.html(), window.user_login)
         $(@el).addClass('highlightedRow')
-
-      imgResp = @replaceURLWithImageTags(resp)
-      if imgResp != resp
-        resp = imgResp
-      else
-        youtubeResp = @replaceURLWithYoutubeEmbeds(resp)
-        if youtubeResp != resp
-          resp = youtubeResp
-        else
-          linkResp = @replaceURLWithHTMLLinks(resp)
-          if linkResp != resp
-            resp = linkResp
-
-      resp = @replaceTextWithEmoticons(resp)
-      resp = @replaceTextWithEmoji(resp)
-      resp
 
     containsLogin: (text, login) ->
       text.indexOf(login) > -1
@@ -267,6 +271,7 @@ Hubrooms.module 'Views', (module, App, Backbone, Marionette, $, _) ->
           "<img src='" + window.emoji_map[p1] + "' height='20' width='20' align='absmiddle' />"
         else
           str
+
 
   class module.MessagesView extends Marionette.CollectionView
     itemView: module.MessageItem

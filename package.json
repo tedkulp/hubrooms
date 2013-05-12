@@ -5,6 +5,7 @@
   "author": "Ted Kulp",
   "dependencies": {
     "express.io": "*",
+    "connect": "*",
     "underscore": "*",
     "passport-github": "git://github.com/lyatiss/passport-github.git#useragent",
     "passport" : "0.1.16",
