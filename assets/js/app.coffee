@@ -205,7 +205,7 @@ Hubrooms.module 'Views', (module, App, Backbone, Marionette, $, _) ->
         resp = view.replaceTextWithEmoji(resp)
         resp
 
-    imgRegex: /(https?:\/\/\S+\.(gif|jpe?g|png))(?:\?[A-Za-z0-9_\-\=]+)?/ig
+    imgRegex: /(https?:\/\/\S+\.(gif|jpe?g|png))(?:\?[A-Za-z0-9_\-\=\&]+)?/ig
     linkRegex: /(\b(https?|ftp|file):\/\/[-A-Z0-9+&@#\/%?=~_|!:,.;]*[-A-Z0-9+&@#\/%=~_|])/ig
     emojiRegex: /\:([A-Za-z0-9\-_]+)\:/ig
     youtubeRegex: /http:\/\/(?:www\.)?youtube.com\/watch\?(?=.*v=([\w\-]+))(?:[^><\s]+)?/ig
