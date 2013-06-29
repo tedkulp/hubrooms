@@ -85,11 +85,12 @@ app.configure ->
   app.use assets()
   jsPaths assets, console.log
 
-  fileChangedCallback = (err, filePath) ->
-    console.log "File Changed: #{filePath}"
+  if app.get('env') == 'development'
+    fileChangedCallback = (err, filePath) ->
+      console.log "File Changed: #{filePath}"
 
-  jsPaths assets, console.log, fileChangedCallback, (err, watcher) ->
-    console.log "Watcher initialized"
+    jsPaths assets, console.log, fileChangedCallback, (err, watcher) ->
+      console.log "Watcher initialized"
 
   app.use(app.router)
   app.use(express.static(__dirname + '/public'))
@@ -147,12 +148,16 @@ app.get '/', (req, res) ->
           title: 'Home'
           user: req.user
           channels: channels
+          googleAnalyticsId: nconf.get('googleAnalyticsId')
+          googleAnalyticsHostname: nconf.get('googleAnalyticsHostname')
         sdc.increment('home.user.visit')
         sdc.timing('home.user.time', start)
   else
     res.render 'home',
       title: 'Home'
       user: null
+      googleAnalyticsId: nconf.get('googleAnalyticsId')
+      googleAnalyticsHostname: nconf.get('googleAnalyticsHostname')
     sdc.increment('home.anonymous.visit')
     sdc.timing('home.anonymous.time', start)
 
@@ -232,6 +237,9 @@ renderChat = (req, res, user) ->
   res.render 'chat',
     title: 'Chat'
     user: user
+    env: app.get('env')
+    googleAnalyticsId: nconf.get('googleAnalyticsId')
+    googleAnalyticsHostname: nconf.get('googleAnalyticsHostname')
 
 #Setup all the sockets.io stuff
 websockets = require('./lib/websockets')(app, RedisClient, processId, reconcileSha, sdc).setup()
@@ -264,6 +272,8 @@ app.get /^\/(?!(?:css|js|img))([^\/]+)\/([^\/]+)$/, requireLogin, (req, res) ->
       res.render '404-nochannel.jade',
         title: 'Repository Does Not Exist/No Permission'
         user: req.user
+        googleAnalyticsId: nconf.get('googleAnalyticsId')
+        googleAnalyticsHostname: nconf.get('googleAnalyticsHostname')
         sdc.increment('channel.404.count')
         sdc.timing('channel.404.time', start)
     else
@@ -290,6 +300,8 @@ app.get /^\/(?!(?:css|js|img))([^\/]+)\/([^\/]+)$/, requireLogin, (req, res) ->
             res.render 'ask-for-parent.jade',
               title: 'Ask for Parent'
               user: req.user
+              googleAnalyticsId: nconf.get('googleAnalyticsId')
+              googleAnalyticsHostname: nconf.get('googleAnalyticsHostname')
               channelName: channelName
               sourceName: githubChannelData.source.full_name
               parentName: githubChannelData.parent.full_name

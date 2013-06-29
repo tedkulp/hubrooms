@@ -16,6 +16,7 @@ block content
   script
     window.user_id = '#{user._id}';
     window.user_login = '#{user.login}';
+    window.node_env = '#{env}';
 
   script#channel-nav-item(type='text/html')
     a(href!='/<%= name %>') <%= name %>
