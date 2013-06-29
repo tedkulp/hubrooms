@@ -43,4 +43,6 @@ define ['app', 'collections/channels', 'collections/messages', 'collections/user
 
       App.vent.trigger('channel:changed', Backbone.history.fragment)
 
-  return new Controller()
+  App.controller = new Controller()
+
+  return App.controller
