@@ -10,7 +10,9 @@ else
   %x[cd #{tmpdir} && git pull origin master --verbose]
 end
 
-json_result = 'var emoji_map = {'
+
+json_result = "define(function() {\n"
+json_result += '  return {'
 
 File.open(root_path.join('tmp', 'emoji-tmp', 'public', 'index.html')) do |file|
   file.each_line do |line|
@@ -22,7 +24,8 @@ File.open(root_path.join('tmp', 'emoji-tmp', 'public', 'index.html')) do |file|
 end
 
 json_result = json_result[0...-1]
-json_result += '}'
+json_result += "};\n"
+json_result += '});'
 
 json_file = File.new(root_path.join('assets', 'js').to_s + '/emoji.js', 'w')
 json_file.write(json_result)

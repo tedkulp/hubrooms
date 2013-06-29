@@ -1,4 +1,4 @@
-define ['moment'], (moment) ->
+define ['moment', 'emoji'], (moment, emoji) ->
   Hubrooms.module 'Views', (module, App, Backbone, Marionette, $, _) ->
     class module.MessageItem extends Marionette.ItemView
       template: '#message-item'
@@ -91,8 +91,8 @@ define ['moment'], (moment) ->
 
       replaceTextWithEmoji: (text) =>
         text.replace @emojiRegex, (str, p1, offset, s) ->
-          if window.emoji_map and window.emoji_map[p1]
-            "<img src='" + window.emoji_map[p1] + "' height='20' width='20' align='absmiddle' />"
+          if emoji and emoji[p1]
+            "<img src='" + emoji[p1] + "' height='20' width='20' align='absmiddle' />"
           else
             str
 
