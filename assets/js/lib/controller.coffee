@@ -45,4 +45,4 @@ define ['app', 'collections/channels', 'collections/messages', 'collections/user
 
   App.controller = new Controller()
 
-  return App.controller
+  App.controller
