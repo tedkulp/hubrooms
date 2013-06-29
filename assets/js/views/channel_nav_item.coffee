@@ -1,5 +1,4 @@
 define ['router'], (router) ->
-  console.log router
   Hubrooms.module 'Views', (module, App, Backbone, Marionette, $, _) ->
     class module.ChannelNavItem extends Marionette.ItemView
       template: '#channel-nav-item'

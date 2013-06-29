@@ -27,6 +27,8 @@ require.config
   shim:
     jquery:
       exports: "$"
+    jquery_ui:
+      deps: ['jquery']
     bootstrap:
       deps: ['jquery']
     underscore:
@@ -40,5 +42,4 @@ require.config
 
 require ['app'], (App) ->
   require ['router', 'initialization'], (router, initialization) ->
-    console.log router
     App.start()
