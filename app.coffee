@@ -69,13 +69,27 @@ app.configure ->
 
   redisStore = new RedisStore
     client: RedisClient
-  app.use express.session
+
+  sessionMiddleware = express.session
     secret: 'nyan cat is hungry'
     store: redisStore
 
+  app.use (req, res, next) ->
+    sessionMiddleware req, res, next
+
   passport.configure()
 
-  app.use require('connect-assets')()
+  assets = require 'connect-assets'
+  jsPaths = require 'connect-assets-jspaths'
+
+  app.use assets()
+  jsPaths assets, console.log
+
+  fileChangedCallback = (err, filePath) ->
+    console.log "File Changed: #{filePath}"
+
+  jsPaths assets, console.log, fileChangedCallback, (err, watcher) ->
+    console.log "Watcher initialized"
 
   app.use(app.router)
   app.use(express.static(__dirname + '/public'))
@@ -88,7 +102,7 @@ app.configure ->
 
   # Code to handle a request to socket.io with just the apikey parameter
   # For hubot-hubrooms -- more stuff later
-  # Wrap the original function from express.io in one of our own to check the 
+  # Wrap the original function from express.io in one of our own to check the
   # login and apikey and authorize it if it matches. Otherwise, process to the
   # original logic.
   origFunction = app.io.get('authorization')

@@ -12,6 +12,7 @@
     "coffee-script" : "*",
     "jade" : "*",
     "connect-assets" : "*",
+    "connect-assets-jspaths" : "*",
     "mongoose" : "*",
     "mongoose-times" : "*",
     "mongoose-findorcreate" : "*",

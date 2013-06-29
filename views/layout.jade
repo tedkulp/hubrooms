@@ -6,16 +6,10 @@ html
     link(rel='stylesheet', href='/css/bootstrap-responsive.min.css')
     link(rel='stylesheet', href='//ajax.googleapis.com/ajax/libs/jqueryui/1/themes/smoothness/jquery-ui.min.css')
     != css('app')
-    script(src='//ajax.googleapis.com/ajax/libs/jquery/1/jquery.min.js')
-    script(src='//ajax.googleapis.com/ajax/libs/jqueryui/1/jquery-ui.min.js')
-    != js('jquery_extensions')
-    script(src='/js/bootstrap.min.js')
-    script(src='/socket.io/socket.io.js')
-    script(src='//cdnjs.cloudflare.com/ajax/libs/underscore.js/1.4.4/underscore-min.js')
-    script(src='//cdnjs.cloudflare.com/ajax/libs/moment.js/2.0.0/moment.min.js')
-    script(src='//cdnjs.cloudflare.com/ajax/libs/underscore.string/2.3.0/underscore.string.min.js')
-    script(src='//cdnjs.cloudflare.com/ajax/libs/backbone.js/1.0.0/backbone-min.js')
-    script(src='/js/backbone.marionette.min.js')
+    != exportPaths('jsPaths')
+
+    - var mainJsPath = jsUrl('/js/main.js')
+    script(type="text/javascript",src="//cdnjs.cloudflare.com/ajax/libs/require.js/2.1.5/require.min.js",data-main="#{mainJsPath}")
     style
       body {
         padding-top: 60px;

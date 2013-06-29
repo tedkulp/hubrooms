@@ -13,14 +13,9 @@ block content
     table#render_table.table.table-striped.table-condensed(style='')
       tbody
 
-  != js('app')
-  != js('emoji')
-
   script
-    $(document).ready(function() {
-      window.user_id = '#{user._id}';
-      window.user_login = '#{user.login}';
-    });
+    window.user_id = '#{user._id}';
+    window.user_login = '#{user.login}';
 
   script#channel-nav-item(type='text/html')
     a(href!='/<%= name %>') <%= name %>
