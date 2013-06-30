@@ -7,9 +7,10 @@
     "express.io": "*",
     "connect": "*",
     "underscore": "*",
+    "requirejs": "2.1.6",
     "passport-github": "git://github.com/lyatiss/passport-github.git#useragent",
     "passport" : "0.1.16",
-    "coffee-script" : "*",
+    "coffee-script" : "1.6.3",
     "jade" : "*",
     "connect-assets" : "*",
     "connect-assets-jspaths" : "*",
@@ -23,6 +24,7 @@
     "github" : "*",
     "node-uuid" : "*",
     "promised-io" : "*",
-    "statsd-client" : "*"
+    "statsd-client" : "*",
+    "amdefine": ">=0.0.5"
   }
 }
