@@ -1,22 +1,22 @@
-mongoose = require 'mongoose'
-Schema = mongoose.Schema
-ObjectId = Schema.ObjectId
-timestamps = require 'mongoose-times'
-findOrCreate = require 'mongoose-findorcreate'
+define ['cs!lib/mongoose'], (mongoose) ->
+  Schema = mongoose.Schema
+  ObjectId = Schema.ObjectId
+  timestamps = require 'mongoose-times'
+  findOrCreate = require 'mongoose-findorcreate'
 
-UserSchema = new Schema
-  login: String
-  external_id: Number
-  name: String
-  location: String
-  email: String
-  url: String
-  access_token: String
-  refresh_token: String
-  api_key: String
-  channels: [{ type: Schema.Types.ObjectId, ref: 'Channel' }]
+  UserSchema = new Schema
+    login: String
+    external_id: Number
+    name: String
+    location: String
+    email: String
+    url: String
+    access_token: String
+    refresh_token: String
+    api_key: String
+    channels: [{ type: Schema.Types.ObjectId, ref: 'Channel' }]
 
-UserSchema.plugin timestamps, { created: "created_at", lastUpdated: "updated_at" }
-UserSchema.plugin findOrCreate
+  UserSchema.plugin timestamps, { created: "created_at", lastUpdated: "updated_at" }
+  UserSchema.plugin findOrCreate
 
-module.exports = mongoose.model('User', UserSchema)
+  mongoose.model('User', UserSchema)

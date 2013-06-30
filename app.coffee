@@ -5,29 +5,20 @@ requirejs.config
   paths:
     cs: 'plugins/cs'
 
-express = require('express.io')
-connect = require('connect')
 _ = require('underscore')
-mongoose = require('mongoose')
-processId = require('node-uuid').v4()
 def = require("promised-io/promise").Deferred
 crypto = require('crypto')
-console.log "Process ID: ", processId
 
 githubApi = require('github')
 github = new githubApi
   version: '3.0.0'
 
-requirejs ['cs!lib/app'], (app) ->
-
-  # Load models
-  User = require('./models/user')
-  Channel = require('./models/channel')
-  Message = require('./models/message')
+requirejs ['cs!lib/app', 'cs!models/user', 'cs!models/channel', 'cs!models/message'], (app, User, Channel, Message) ->
+  console.log "Process ID: ", app.processId
 
   # Setup redis
   redis = require('redis')
-  RedisStore = require('connect-redis')(express)
+  RedisStore = require('connect-redis')(app.express)
   RedisClient = redis.createClient(app.conf.get('redisPort'), app.conf.get('redisHost'))
 
   reconcileSha = ->
@@ -58,8 +49,6 @@ requirejs ['cs!lib/app'], (app) ->
     .file
       file: "./config/#{app.server.get('env')}.json"
 
-  mongoose.connect(app.conf.get('mongoUri'))
-
   # Include all the passport stuff for talking
   # with GitHub
   passport = require('./lib/passport')(app.server, app.conf, app.stats)
@@ -67,15 +56,15 @@ requirejs ['cs!lib/app'], (app) ->
   app.server.configure ->
     app.server.set('views', __dirname + '/views')
     app.server.set('view engine', 'jade')
-    app.server.use(express.logger())
-    app.server.use(express.cookieParser())
-    app.server.use(express.bodyParser())
-    app.server.use(express.methodOverride())
+    app.server.use(app.express.logger())
+    app.server.use(app.express.cookieParser())
+    app.server.use(app.express.bodyParser())
+    app.server.use(app.express.methodOverride())
 
     redisStore = new RedisStore
       client: RedisClient
 
-    sessionMiddleware = express.session
+    sessionMiddleware = app.express.session
       secret: 'nyan cat is hungry'
       store: redisStore
 
@@ -98,9 +87,9 @@ requirejs ['cs!lib/app'], (app) ->
         console.log "Watcher initialized"
 
     app.server.use(app.server.router)
-    app.server.use(express.static(__dirname + '/public'))
+    app.server.use(app.express.static(__dirname + '/public'))
 
-    app.server.io.set 'store', new express.io.RedisStore
+    app.server.io.set 'store', new app.express.io.RedisStore
       redisPub: redis.createClient(app.conf.get('redisPort'), app.conf.get('redisHost'))
       redisSub: redis.createClient(app.conf.get('redisPort'), app.conf.get('redisHost'))
       # redisClient: redis.createClient(app.conf.get('redisPort'), app.conf.get('redisHost'))
@@ -129,7 +118,7 @@ requirejs ['cs!lib/app'], (app) ->
               sessionData =
                 passport:
                   user: user
-              data.session = new connect.session.Session data, sessionData
+              data.session = new require('connect').session.Session data, sessionData
               next null, true
       else
         return origFunction(data, next)
@@ -249,7 +238,7 @@ requirejs ['cs!lib/app'], (app) ->
       googleAnalyticsHostname: app.conf.get('googleAnalyticsHostname')
 
   #Setup all the sockets.io stuff
-  websockets = require('./lib/websockets')(app.server, RedisClient, processId, reconcileSha, app.stats).setup()
+  websockets = require('./lib/websockets')(app.server, RedisClient, app.processId, reconcileSha, app.stats).setup()
 
   app.server.get /^\/(?!(?:css|js|img))([^\/]+)\/([^\/]+)\/leave$/, requireLogin, (req, res) ->
     start = new Date()
@@ -323,7 +312,7 @@ requirejs ['cs!lib/app'], (app) ->
                   app.stats.timing('channel.create.time', start)
 
   setInterval ->
-    RedisClient.expire "process:#{processId}", 30
+    RedisClient.expire "process:#{app.processId}", 30
   , 30 * 1000
 
   reconcileSha().then (sha) ->
@@ -335,7 +324,7 @@ requirejs ['cs!lib/app'], (app) ->
   gracefulShutdown = (callback) ->
     console.log "shutdown"
     reconcileSha().then (sha) ->
-      RedisClient.del("process:#{processId}")
+      RedisClient.del("process:#{app.processId}")
       RedisClient.evalsha sha, 0, (err, res) ->
         callback() if callback?
 
