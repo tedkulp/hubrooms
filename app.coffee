@@ -147,6 +147,7 @@ app.get '/', (req, res) ->
         res.render 'index',
           title: 'Home'
           user: req.user
+          env: app.get('env')
           channels: channels
           googleAnalyticsId: nconf.get('googleAnalyticsId')
           googleAnalyticsHostname: nconf.get('googleAnalyticsHostname')
@@ -156,6 +157,7 @@ app.get '/', (req, res) ->
     res.render 'home',
       title: 'Home'
       user: null
+      env: app.get('env')
       googleAnalyticsId: nconf.get('googleAnalyticsId')
       googleAnalyticsHostname: nconf.get('googleAnalyticsHostname')
     sdc.increment('home.anonymous.visit')
@@ -272,6 +274,7 @@ app.get /^\/(?!(?:css|js|img))([^\/]+)\/([^\/]+)$/, requireLogin, (req, res) ->
       res.render '404-nochannel.jade',
         title: 'Repository Does Not Exist/No Permission'
         user: req.user
+        env: app.get('env')
         googleAnalyticsId: nconf.get('googleAnalyticsId')
         googleAnalyticsHostname: nconf.get('googleAnalyticsHostname')
         sdc.increment('channel.404.count')
@@ -300,6 +303,7 @@ app.get /^\/(?!(?:css|js|img))([^\/]+)\/([^\/]+)$/, requireLogin, (req, res) ->
             res.render 'ask-for-parent.jade',
               title: 'Ask for Parent'
               user: req.user
+              env: app.get('env')
               googleAnalyticsId: nconf.get('googleAnalyticsId')
               googleAnalyticsHostname: nconf.get('googleAnalyticsHostname')
               channelName: channelName
