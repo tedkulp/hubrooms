@@ -1,10 +1,10 @@
-define ['cs!lib/stats'], (stats) ->
+define ['cs!lib/stats', 'cs!lib/server'], (stats, server) ->
   express = require('express.io')
 
   {
     express    : express
+    server     : server
     processId  : require('node-uuid').v4()
-    server     : express().http().io()
     conf       : require('nconf')
     stats      : null
     initialize : ->

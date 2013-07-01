@@ -42,25 +42,11 @@ requirejs ['cs!lib/app', 'cs!models/user', 'cs!models/channel', 'cs!models/messa
       dfd.resolve(res)
     dfd.promise
 
-  # Grab all our config vars
-  app.conf
-    .argv()
-    .env()
-    .file
-      file: "./config/#{app.server.get('env')}.json"
-
   # Include all the passport stuff for talking
   # with GitHub
   passport = require('./lib/passport')(app.server, app.conf, app.stats)
 
   app.server.configure ->
-    app.server.set('views', __dirname + '/views')
-    app.server.set('view engine', 'jade')
-    app.server.use(app.express.logger())
-    app.server.use(app.express.cookieParser())
-    app.server.use(app.express.bodyParser())
-    app.server.use(app.express.methodOverride())
-
     redisStore = new RedisStore
       client: RedisClient
 
@@ -85,9 +71,6 @@ requirejs ['cs!lib/app', 'cs!models/user', 'cs!models/channel', 'cs!models/messa
 
       jsPaths assets, console.log, fileChangedCallback, (err, watcher) ->
         console.log "Watcher initialized"
-
-    app.server.use(app.server.router)
-    app.server.use(app.express.static(__dirname + '/public'))
 
     app.server.io.set 'store', new app.express.io.RedisStore
       redisPub: redis.createClient(app.conf.get('redisPort'), app.conf.get('redisHost'))
