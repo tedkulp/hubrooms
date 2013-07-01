@@ -8,7 +8,7 @@ define ->
       RedisStore = require('connect-redis')(express)
       RedisClient = redis.createClient(app.conf.get('redisPort'), app.conf.get('redisHost'))
 
-      server.set('views', __dirname + '/../../../views')
+      server.set('views', global.basePath + '/views')
       server.set('view engine', 'jade')
 
       server.use(express.logger())
@@ -42,7 +42,7 @@ define ->
       passport.configure(server)
 
       server.use(server.router)
-      server.use(express.static(__dirname + '/../../../public'))
+      server.use(express.static(global.basePath + '/public'))
 
       app.events.emit('middlewareLoaded')
 

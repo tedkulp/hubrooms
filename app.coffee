@@ -5,6 +5,8 @@ requirejs.config
   paths:
     cs: 'plugins/cs'
 
+global.basePath = __dirname
+
 _ = require('underscore')
 def = require("promised-io/promise").Deferred
 crypto = require('crypto')
