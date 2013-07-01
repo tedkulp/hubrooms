@@ -190,6 +190,7 @@ requirejs ['cs!lib/app', 'cs!models/user', 'cs!models/channel', 'cs!models/messa
         title: 'Chat'
         user: user
         env: app.server.get('env')
+        startApp: true
         googleAnalyticsId: app.conf.get('googleAnalyticsId')
         googleAnalyticsHostname: app.conf.get('googleAnalyticsHostname')
 

@@ -5,11 +5,18 @@ html
     link(rel='stylesheet', href='/css/bootstrap.min.css')
     link(rel='stylesheet', href='/css/bootstrap-responsive.min.css')
     link(rel='stylesheet', href='//ajax.googleapis.com/ajax/libs/jqueryui/1/themes/smoothness/jquery-ui.min.css')
+
     != css('app')
     != exportPaths('jsPaths')
 
-    - var mainJsPath = jsUrl('/js/main.js')
-    script(type="text/javascript",src="//cdnjs.cloudflare.com/ajax/libs/require.js/2.1.5/require.min.js",data-main="#{mainJsPath}")
+    - if (typeof(startApp) !== "undefined")
+      - var mainJsPath = jsUrl('/js/main.js')
+      script(type="text/javascript",src="//cdnjs.cloudflare.com/ajax/libs/require.js/2.1.5/require.min.js",data-main="#{mainJsPath}")
+    - else
+      script(type="text/javascript",src="//ajax.googleapis.com/ajax/libs/jquery/1/jquery.min.js")
+      script(type="text/javascript",src="//ajax.googleapis.com/ajax/libs/jqueryui/1/jquery-ui.min.js")
+      script(type="text/javascript",src="/js/bootstrap.min.js")
+
     style
       body {
         padding-top: 60px;
