@@ -8,41 +8,23 @@ requirejs.config
 global.basePath = __dirname
 
 _ = require('underscore')
-def = require("promised-io/promise").Deferred
 crypto = require('crypto')
 
 githubApi = require('github')
 github = new githubApi
   version: '3.0.0'
 
-requirejs ['cs!lib/app', 'cs!models/user', 'cs!models/channel', 'cs!models/message', 'cs!lib/passport', 'cs!lib/redis_client', 'cs!lib/require_login', 'cs!lib/render_chat'], (app, User, Channel, Message, passport, RedisClient, requireLogin, renderChat) ->
+requirejs ['cs!lib/app', 'cs!models/user', 'cs!models/channel',
+  'cs!models/message', 'cs!lib/passport', 'cs!lib/redis_client',
+  'cs!lib/require_login', 'cs!lib/render_chat', 'cs!lib/reconcile_sha',
+  'cs!lib/websockets'], (app, User, Channel, Message, passport, RedisClient, requireLogin, renderChat, reconcileSha, websockets) ->
+
   console.log "Process ID: ", app.processId
 
   # Setup redis
   redis = require('redis')
   RedisStore = require('connect-redis')(app.express)
   # RedisClient = redis.createClient(app.conf.get('redisPort'), app.conf.get('redisHost'))
-
-  reconcileSha = ->
-    reconcileFunction = "
-      local keys_to_remove = redis.call('KEYS', 'user:*')
-      for i=1, #keys_to_remove do
-        redis.call('DEL', keys_to_remove[i])
-      end
-
-      local processes = redis.call('KEYS', 'process:*')
-      for i=1, #processes do
-        local users_in_process = redis.call('LRANGE', processes[i], 0, -1)
-        for j=1, #users_in_process do
-          redis.call('INCR', 'user:' .. users_in_process[j])
-        end
-      end
-    "
-
-    dfd = new def()
-    RedisClient.script 'load', reconcileFunction, (err, res) ->
-      dfd.resolve(res)
-    dfd.promise
 
   app.server.configure ->
 
@@ -82,9 +64,6 @@ requirejs ['cs!lib/app', 'cs!models/user', 'cs!models/channel', 'cs!models/messa
 
   app.events.on 'middlewareLoaded', ->
     passport.setup(app)
-
-    #Setup all the sockets.io stuff
-    websockets = require('./lib/websockets')(app.server, RedisClient, app.processId, reconcileSha, app.stats).setup()
 
     requirejs ['cs!routes/index'], (index) ->
       app.server.get /^\/(?!(?:css|js|img))([^\/]+)\/([^\/]+)\/leave$/, requireLogin, (req, res) ->
