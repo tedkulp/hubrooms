@@ -16,6 +16,10 @@ define ->
       server.use(express.bodyParser())
       server.use(express.methodOverride())
 
+      if app.errbit
+        server.use(app.errbit.expressHandler())
+        app.errbit.handleExceptions()
+
       redisStore = new RedisStore
         client: RedisClient
 

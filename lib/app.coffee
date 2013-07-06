@@ -9,6 +9,7 @@ define ['cs!lib/stats', 'cs!lib/server'], (stats, server) ->
     processId  : require('node-uuid').v4()
     conf       : require('nconf')
     stats      : null
+    errbit     : null
     initialize : ->
       @stats = stats.initialize(@)
 
@@ -17,6 +18,9 @@ define ['cs!lib/stats', 'cs!lib/server'], (stats, server) ->
         .env()
         .file
           file: "./config/#{@server.get('env')}.json"
+
+      if @conf.get('errbitApiKey') and @conf.get('errbitApiKey') != ''
+        @errbit = require('airbrake').createClient(@conf.get('errbitApiKey'))
 
       @
   }.initialize()

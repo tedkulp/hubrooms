@@ -25,6 +25,7 @@
     "node-uuid" : "*",
     "promised-io" : "*",
     "statsd-client" : "*",
-    "amdefine": ">=0.0.5"
+    "amdefine": ">=0.0.5",
+    "airbrake": "0.3.1"
   }
 }
