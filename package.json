@@ -17,6 +17,7 @@
     "mongoose" : "*",
     "mongoose-times" : "*",
     "mongoose-findorcreate" : "*",
+    "mongoose-middleware" : "*",
     "redis" : "*",
     "connect-redis" : "*",
     "stylus" : "*",

@@ -29,6 +29,8 @@ require.config
       exports: "$"
     jquery_ui:
       deps: ['jquery']
+    jquery_extensions:
+      deps: ['jquery']
     bootstrap:
       deps: ['jquery']
     underscore:

@@ -3,7 +3,7 @@ define ['marionette', 'socket_io', 'offline'], (marionette, io, offline) ->
 
   Hubrooms.addRegions
     channelNav      : '#channel_nav_area'
-    messages        : '#messages'
+    messages        : '#messages-container'
     userList        : '#userlist'
     sendMessageArea : '#send_message_area'
 

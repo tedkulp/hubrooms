@@ -1,16 +1,28 @@
-define ['views/message_item'], (messageItem) ->
+_ = require('underscore')
+
+define ['views/message_item', 'jquery_extensions'], (messageItem, jqueryExtensions) ->
   Hubrooms.module 'Views', (module, App, Backbone, Marionette, $, _) ->
-    class module.MessagesView extends Marionette.CollectionView
+    class module.MessagesView extends Marionette.CompositeView
+      template: _.template('<table class="table table-striped table-condensed" id="messages-table"></table>')
       itemView: messageItem.MessageItem
-      tagName: 'table'
-      className: 'table table-striped table-condensed'
+      itemViewContainer: '#messages-table'
+      className: 'messages'
       ui:
-        messages : '#messages'
+        table: '#messages-table'
 
-      onBeforeItemAdded: ->
-        @scrollDown = $(@ui.messages).scrollTop() == ($(@ui.messages)[0].scrollHeight - $(@ui.messages)[0].offsetHeight)
+      onRender: ->
+        @$el.off 'scroll'
+        @$el.on 'scroll', (e) =>
+          if @$el[0].scrollHeight > @$el.height()
+            if @$el.scrollTop() == 0
+              scrollTo = @$('tr:first')
+              promise = @collection.nextPage()
+              if promise
+                promise.done =>
+                  @$el.scrollTop scrollTo.offset().top - @$el.offset().top + @$el.scrollTop()
 
-      onAfterItemAdded: ->
-        if @scrollDown
-          $(@ui.messages).scrollTop($(@ui.messages)[0].scrollHeight)
-        @scrollDown = false
+      appendHtml: (collectionView, itemView, index) ->
+        if @collection.prepend
+          @ui.table.prepend(itemView.el)
+        else
+          @ui.table.append(itemView.el)

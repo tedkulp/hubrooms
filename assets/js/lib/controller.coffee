@@ -34,9 +34,8 @@ define ['app', 'collections/channels', 'collections/messages', 'collections/user
 
     chat: ->
       @channels.getCurrentChannel().done (currentChannel) =>
-        @messages.fetch
-          data:
-            channel_id: currentChannel.get('_id')
+        @messages.channelId = currentChannel.get('_id')
+        @messages.nextPage() # Get the first page of messages
         @users.fetch
           data:
             channel_id: currentChannel.get('_id')

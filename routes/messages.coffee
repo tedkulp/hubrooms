@@ -1,10 +1,18 @@
 define ['cs!lib/app', 'cs!lib/require_login', 'cs!models/message'], (app, requireLogin, Message) ->
   app.server.get '/messages', requireLogin, (req, res) ->
+    options =
+      start: req.param('start') || 0
+      count: 100
+      sort:
+        desc: '_id'
     start = new Date()
     Message
       .find
         channel_id: req.param('channel_id')
-      .exec (err, messages) ->
+      .order(options)
+      .page options, (err, messages) ->
+        unless req.param('no_reverse')
+          messages.results.reverse()
         res.json(messages)
         app.stats.timing('messages.received.time', start)
 
