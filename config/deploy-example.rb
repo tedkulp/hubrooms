@@ -6,7 +6,7 @@ require 'capistrano/chef'
 require 'airbrake/capistrano'
 
 set :application, "hubrooms"
-set :repository,  "git@git.shiftrefresh.net:hubrooms/hubrooms-node.git"
+set :repository,  "git@github.com:tedkulp/hubrooms.git"
 set :deploy_to,   "/opt/hubrooms/app"
 
 set :use_sudo, false
