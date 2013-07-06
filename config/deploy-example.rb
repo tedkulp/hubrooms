@@ -3,6 +3,7 @@ set :default_stage, "production"
 
 require 'capistrano/ext/multistage'
 require 'capistrano/chef'
+require 'airbrake/capistrano'
 
 set :application, "hubrooms"
 set :repository,  "git@git.shiftrefresh.net:hubrooms/hubrooms-node.git"
@@ -42,3 +43,10 @@ set :node_binary, "/usr/local/bin/coffee"
 after "deploy:update_code" do
   run "ln -nfs #{deploy_to}/production.json #{release_path}/config/production.json"
 end
+
+# namespace :airbrake do
+#   desc "Notify Airbrake of a new deploy."
+#   task :deploy do
+#     system "AIRBRAKE_SERVER=\"errors.tedkulp.com\" node deploy.js #{current_revision} #{repository} #{stage} #{user}"
+#   end
+# end
